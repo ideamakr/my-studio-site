@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Studio · Internal systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;900&family=Unbounded:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .hero { padding: clamp(60px, 9vw, 120px) var(--gutter) clamp(56px, 8vw, 96px); }
+  .hero h1 { font-size: clamp(46px, 7.4vw, 100px); font-weight: 900; letter-spacing: -0.045em; line-height: 0.93; max-width: 14ch; }
+  .hero h1 .strike {
+    background: linear-gradient(var(--yellow), var(--yellow)) no-repeat 0 88% / 0% 0.3em;
+    animation: wash 1s .35s cubic-bezier(.6,0,.2,1) forwards;
+  }
+  @keyframes wash { to { background-size: 100% 0.3em; } }
+  .hero .lede { margin-top: 26px; max-width: 46ch; font-size: 20px; color: var(--ink-soft); }
+
+  /* Interactive: what we can do */
+  .path-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: clamp(20px, 3vw, 36px); align-items: start; }
+  .path-tab {
+    display: block; width: 100%; text-align: left; padding: 20px 22px; margin-bottom: 12px;
+    background: rgba(255,255,255,.4); border: 1px solid rgba(255,255,255,.8); border-radius: 18px;
+    box-shadow: 0 8px 26px rgba(23,32,43,.08); transition: transform .2s, background .25s, color .25s;
+  }
+  .path-tab:hover { transform: translateX(4px); }
+  .path-tab strong { display: block; font-size: 19px; font-weight: 900; letter-spacing: -0.01em; line-height: 1.2; }
+  .path-tab small { display: block; font-size: 14px; margin-top: 6px; color: var(--ink-soft); }
+  .path-tab[aria-selected="true"] { background: rgba(23,32,43,.88); color: #fff; }
+  .path-tab[aria-selected="true"] small { color: #C9D1DC; }
+
+  .path-panel { padding: clamp(22px, 3vw, 34px); min-height: 420px; }
+  .path-panel h3 { font-size: clamp(22px, 2.6vw, 30px); font-weight: 900; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 10px; }
+  .path-panel > p { color: var(--ink-soft); margin-bottom: 22px; max-width: 52ch; }
+
+  /* Switch */
+  .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid rgba(23,32,43,.1); border-bottom: 1px solid rgba(23,32,43,.1); margin-bottom: 18px; }
+  .switch-row span { font-weight: 700; font-size: 16px; }
+  .switch {
+    width: 58px; height: 32px; border-radius: 999px; border: 0; padding: 4px; cursor: pointer;
+    background: rgba(23,32,43,.22); transition: background .3s; position: relative; flex: none;
+  }
+  .switch .knob { display: block; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); transform: translateX(0); transition: transform .3s cubic-bezier(.2,.7,.2,1); }
+  .switch[aria-checked="true"] { background: var(--green); }
+  .switch[aria-checked="true"] .knob { transform: translateX(26px); }
+
+  /* Timesheet preview */
+  .sheet-preview { border: 1px solid rgba(23,32,43,.15); border-radius: 14px; overflow: hidden; background: rgba(255,255,255,.55); }
+  .sheet-row { display: grid; grid-template-columns: 70px minmax(0,1fr) 70px; gap: 12px; padding: 12px 16px; border-bottom: 1px solid rgba(23,32,43,.08); font-size: 15px; align-items: center; transition: background .4s, color .4s; }
+  .sheet-row:last-child { border-bottom: 0; }
+  .sheet-row .d { font-weight: 700; }
+  .sheet-row .h { text-align: right; font-family: "JetBrains Mono", monospace; }
+  .sheet-row.auto { background: rgba(42,79,214,.14); }
+  .sheet-row.empty { color: #A5AEBB; font-style: italic; }
+  .sheet-note { margin-top: 14px; font-size: 15px; color: var(--ink-soft); min-height: 24px; }
+
+  /* Migration */
+  .mig-row { margin-bottom: 16px; }
+  .mig-row .top { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 6px; }
+  .mig-row .top b { font-family: "JetBrains Mono", monospace; font-weight: 600; }
+  .mig-row .bar { height: 12px; }
+  .mig-status { margin: 18px 0; padding: 14px 16px; border-radius: 14px; background: rgba(221,229,251,.6); font-size: 15px; }
+  .mig-status.done { background: rgba(220,242,227,.8); }
+  .btn-run { margin-top: 4px; }
+
+  /* Upgrade vs rebuild */
+  .choice-list { list-style: none; display: grid; gap: 10px; margin-top: 18px; }
+  .choice-list li { padding: 12px 14px; border-left: 4px solid var(--blue); background: rgba(221,229,251,.55); border-radius: 12px; font-size: 15px; animation: rise .35s ease both; }
+  .choice-list li:nth-child(2) { animation-delay: .05s; }
+  .choice-list li:nth-child(3) { animation-delay: .1s; }
+
+  /* Products */
+  .doors { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(20px, 3vw, 36px); }
+  .door {
+    display: flex; flex-direction: column; gap: 16px; text-decoration: none; color: var(--ink);
+    background: rgba(255,255,255,.5); border: 1px solid rgba(255,255,255,.8); border-radius: 18px;
+    padding: clamp(24px, 3vw, 36px); box-shadow: 0 10px 36px rgba(23,32,43,.10);
+    transition: transform .2s, box-shadow .2s;
+  }
+  .door:hover { transform: translateY(-4px); box-shadow: 0 18px 44px rgba(23,32,43,.18); }
+  .door .k { font-size: 14px; color: var(--ink-soft); }
+  .door h3 { font-size: clamp(26px, 3vw, 36px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; }
+  .door p { color: var(--ink-soft); max-width: 40ch; }
+  .door .go { margin-top: auto; font-weight: 700; color: var(--blue); }
+  .door .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; border-top: 1px dashed rgba(23,32,43,.2); padding-top: 16px; }
+  .door .stats div { font-size: 13px; color: var(--ink-soft); }
+  .door .stats b { display: block; font-size: 24px; color: var(--ink); font-weight: 900; letter-spacing: -0.02em; }
+  .door.tc { background: rgba(23,32,43,.72); border-color: rgba(255,255,255,.18); color: #fff; }
+  .door.tc p, .door.tc .k, .door.tc .stats div { color: #B9C2CF; }
+  .door.tc .stats div { border-color: #2B3644; }
+  .door.tc .stats b { color: var(--paper); }
+  .door.tc .go { color: var(--yellow); }
+
+  /* Build yours */
+  .configure { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 60px); align-items: start; }
+  .checks { display: grid; gap: 10px; }
+  .check { display: flex; gap: 14px; align-items: flex-start; padding: 16px; border: 1px solid rgba(255,255,255,.8); border-radius: 14px; background: rgba(255,255,255,.5); cursor: pointer; transition: transform .2s; }
+  .check:hover { transform: translateX(4px); }
+  .check input { margin-top: 5px; width: 18px; height: 18px; accent-color: var(--blue); flex: none; }
+  .check strong { display: block; font-size: 17px; }
+  .check span { font-size: 14px; color: var(--ink-soft); }
+  .quote { border-radius: 18px; background: rgba(242,210,75,.55); border: 1px solid rgba(255,255,255,.8); padding: 26px; box-shadow: 0 10px 36px rgba(180,140,20,.18); }
+  .quote h3 { font-size: 22px; margin-bottom: 14px; letter-spacing: -0.01em; }
+  .quote ul { list-style: none; display: grid; gap: 8px; margin-bottom: 18px; }
+  .quote li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid rgba(23,32,43,.2); padding-bottom: 6px; font-size: 15px; }
+  .quote li b { font-weight: 700; }
+  .quote .total { display: flex; justify-content: space-between; font-size: 22px; font-weight: 900; }
+  .quote .note { font-size: 14px; margin-top: 14px; }
+
+  @media (max-width: 900px) {
+    .doors, .configure, .path-wrap { grid-template-columns: 1fr; }
+  }
+</style>
+<link rel="stylesheet" href="glass.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="wordmark" href="index.html"><svg width="28" height="28" viewBox="0 0 64 64" role="img" aria-label="My Studio logo" aria-hidden="false"><defs><linearGradient id="logo-tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B7FF0"/><stop offset="1" stop-color="#2A4FD6"/></linearGradient></defs><rect x="4" y="4" width="56" height="56" rx="16" fill="url(#logo-tile)"/><circle cx="32" cy="26" r="16" fill="#FFFFFF" fill-opacity="0.12"/><circle cx="32" cy="25" r="11" fill="#F2D24B"/><rect x="27" y="33" width="10" height="6" rx="2" fill="#F2D24B"/><path d="M27.5 27.5 L30 21.5 L32 25.5 L34 21.5 L36.5 27.5" fill="none" stroke="#2A4FD6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><rect x="24" y="44" width="16" height="4.5" rx="2.25" fill="#FFFFFF"/><rect x="27" y="50" width="10" height="4" rx="2" fill="#FFFFFF" fill-opacity="0.7"/><path d="M48 10 L49.3 13.7 L53 15 L49.3 16.3 L48 20 L46.7 16.3 L43 15 L46.7 13.7 Z" fill="#F2D24B"/></svg><span>My Studio</span></a>
+  <nav>
+    <a href="index.html" aria-current="page">Home</a>
+    <a href="lms.html">Leave system</a>
+    <a href="timecost360.html">Time Cost 360</a>
+    <a href="#build">Build yours</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<main>
+
+  <div class="hero">
+    <p class="kicker">Internal systems for small and mid-sized companies</p>
+    <h1>Internal systems that <span class="strike">take the paperwork</span> off your team.</h1>
+    <p class="lede">We build the tools a company runs on: leave, approvals, timesheets and project cost. Every system is shaped around how your people already work, including how many approval levels you need.</p>
+  </div>
+
+  <!-- INTERACTIVE: what we can do -->
+  <section class="block" id="services-overview">
+    <p class="kicker">What we can do for you</p>
+    <h2>Connect your systems, replace them, or build what you need.</h2>
+    <p class="sub">Pick the situation closest to yours. The panel shows how we would handle it.</p>
+
+    <div class="path-wrap">
+      <div role="tablist" aria-label="What we can do">
+        <button class="path-tab" role="tab" aria-selected="true" data-path="connect">
+          <strong>Connect what you already run</strong>
+          <small>LMS with project cost or timesheets</small>
+        </button>
+        <button class="path-tab" role="tab" aria-selected="false" data-path="replace">
+          <strong>Replace an old system, keep the data</strong>
+          <small>Move your records, checked before switch-over</small>
+        </button>
+        <button class="path-tab" role="tab" aria-selected="false" data-path="custom">
+          <strong>Custom to your rules, or an upgrade</strong>
+          <small>Build to how you work, or improve what you have</small>
+        </button>
+      </div>
+
+      <div class="path-panel card" id="path-panel" role="tabpanel" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="block" id="products">
+    <p class="kicker">Our systems</p>
+    <h2>Two systems we have built. Open either to see it working.</h2>
+    <p class="sub">Each page has live examples: balances, calendars, approvals, and dashboards you can move around.</p>
+
+    <div class="doors">
+      <a class="door" href="lms.html">
+        <span class="k">Product 01 · Employee Hub</span>
+        <h3>Leave management system</h3>
+        <p>Leave balances as cards, who is away today, a team calendar, and approvals with one, two or three levels.</p>
+        <div class="stats">
+          <div><b>~100</b>staff</div>
+          <div><b>1–3</b>approval levels</div>
+          <div><b>4</b>leave types</div>
+        </div>
+        <span class="go">Open the leave system →</span>
+      </a>
+
+      <a class="door tc" href="timecost360.html">
+        <span class="k">Product 02 · Time Cost 360</span>
+        <h3>Project cost and timesheets</h3>
+        <p>Cost against budget for each project, a weekly timesheet, and screens that change with each role.</p>
+        <div class="stats">
+          <div><b>3</b>roles</div>
+          <div><b>RM</b>cost in real time</div>
+          <div><b>1</b>login</div>
+        </div>
+        <span class="go">Open Time Cost 360 →</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="block" id="build">
+    <p class="kicker">Build yours</p>
+    <h2>Tick what you need. We will talk it through.</h2>
+    <p class="sub">Every company signs off requests differently, so we do not quote from a price list. Tick what fits, send it to us, and we will call you to agree the scope and a fair price.</p>
+
+    <div class="configure">
+      <div class="checks" id="checks">
+        <label class="check"><input type="checkbox" checked><div><strong>Leave requests and balances</strong><span>Requests, approvals and balances in one place.</span></div></label>
+        <label class="check"><input type="checkbox"><div><strong>Approval levels, set per client</strong><span>One, two or three levels that follow your reporting lines.</span></div></label>
+        <label class="check"><input type="checkbox"><div><strong>Timesheets by project</strong><span>Staff log hours against the projects they work on.</span></div></label>
+        <label class="check"><input type="checkbox"><div><strong>Cost against budget dashboard</strong><span>See which projects are losing or making money.</span></div></label>
+        <label class="check"><input type="checkbox"><div><strong>Role-based access</strong><span>Each person sees only what their role allows.</span></div></label>
+        <label class="check"><input type="checkbox"><div><strong>Staff profile sign-in</strong><span>One login shared with your existing system.</span></div></label>
+      </div>
+
+      <div class="quote" aria-live="polite">
+        <h3>Your shortlist</h3>
+        <ul id="quote-list"></ul>
+        <p class="note">Nothing is sent yet. Fill in the form below and we will call you to talk through the details.</p>
+        <a class="btn" href="#contact">Send my shortlist →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="block contact" id="contact">
+    <h2>Tell us what takes too long at your company.</h2>
+    <p class="lead">A short brief is enough to start. Include your company size and how many approval levels you need. We reply within two working days.</p>
+    <form class="enquiry" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+      <input type="hidden" name="_subject" value="New My Studio enquiry">
+      <input type="hidden" name="shortlist" id="shortlist-field" value="">
+      <div class="enquiry-grid">
+        <div class="field"><label for="f-name">Your name</label><input id="f-name" name="name" type="text" required autocomplete="name"></div>
+        <div class="field"><label for="f-company">Company</label><input id="f-company" name="company" type="text" autocomplete="organization"></div>
+        <div class="field"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" required autocomplete="email"></div>
+        <div class="field"><label for="f-phone">Phone or WhatsApp (optional)</label><input id="f-phone" name="phone" type="tel" autocomplete="tel"></div>
+      </div>
+      <div class="field"><label for="f-message">What takes too long at your company?</label><textarea id="f-message" name="message" rows="4"></textarea></div>
+      <button class="btn" type="submit">Send enquiry →</button>
+    </form>
+  </section>
+
+</main>
+
+<footer>
+  <p>My Studio. Systems built for small and mid-sized companies.</p>
+</footer>
+
+<script>
+  /* ---------- Interactive: what we can do ---------- */
+  const panel = document.getElementById('path-panel');
+  const tabs = document.querySelectorAll('.path-tab');
+  let migrateTimer = null;
+
+  function showPath(key) {
+    tabs.forEach(t => t.setAttribute('aria-selected', t.dataset.path === key));
+    clearInterval(migrateTimer);
+    if (key === 'connect') renderConnect();
+    if (key === 'replace') renderReplace();
+    if (key === 'custom') renderCustom();
+  }
+
+  /* Connect: LMS and timesheet link */
+  function renderConnect() {
+    panel.innerHTML = `
+      <h3>Leave System Management (LMS) and your timesheet, linked.</h3>
+      <p>Leave System Management (LMS) and project cost or timesheets can work together, or stay separate. We link them only where your company needs it, such as showing approved leave on a timesheet, so nothing is typed twice.</p>
+      <div class="switch-row">
+        <span>Show approved leave on the timesheet</span>
+        <button class="switch" role="switch" aria-checked="false" aria-label="Show approved leave on the timesheet"><span class="knob"></span></button>
+      </div>
+      <div class="sheet-preview" id="sheet"></div>
+      <p class="sheet-note" id="sheet-note"></p>`;
+
+    const sw = panel.querySelector('.switch');
+    const rows = [
+      { d: 'Mon', t: 'Kiosk rollout', h: 8 },
+      { d: 'Tue', t: 'Kiosk rollout', h: 8 },
+      { d: 'Wed', leave: true, h: 8 },
+      { d: 'Thu', t: 'Kiosk rollout', h: 8 },
+      { d: 'Fri', t: 'Kiosk rollout', h: 8 }
+    ];
+
+    function drawSheet(linked) {
+      sw.setAttribute('aria-checked', linked);
+      const sheet = document.getElementById('sheet');
+      sheet.innerHTML = rows.map(r => {
+        if (r.leave) {
+          return linked
+            ? `<div class="sheet-row auto"><span class="d">${r.d}</span><span>Annual leave (approved), filled in</span><span class="h">${r.h} hrs</span></div>`
+            : `<div class="sheet-row empty"><span class="d">${r.d}</span><span>Nothing entered yet</span><span class="h">0 hrs</span></div>`;
+        }
+        return `<div class="sheet-row"><span class="d">${r.d}</span><span>${r.t}</span><span class="h">${r.h} hrs</span></div>`;
+      }).join('');
+      document.getElementById('sheet-note').textContent = linked
+        ? 'Leave came from the LMS. Staff entered 4 days by hand instead of 5.'
+        : 'Without the link, staff type the leave day in again by hand.';
+    }
+
+    sw.addEventListener('click', () => drawSheet(sw.getAttribute('aria-checked') !== 'true'));
+    drawSheet(false);
+  }
+
+  /* Replace: migration with checks */
+  function renderReplace() {
+    const sets = [
+      { name: 'Staff records', total: 96 },
+      { name: 'Leave balances', total: 412 },
+      { name: 'Project history', total: 58 }
+    ];
+    panel.innerHTML = `
+      <h3>Your old records are checked before anything switches over.</h3>
+      <p>Already on a system you want to leave? Worried about your data? <strong style="color:#EA580C;font-weight:900">We build the new one and move your existing records into it, including staff, leave balances, and project history. The move is checked against your old records before anything is switched over.</strong></p>
+      ${sets.map((s, i) => `
+        <div class="mig-row">
+          <div class="top"><span>${s.name}</span><b id="cnt-${i}">0 / ${s.total}</b></div>
+          <div class="bar"><div class="bar-fill" id="bar-${i}" style="width:0"></div></div>
+        </div>`).join('')}
+      <div class="mig-status" id="mig-status">Press the button to run a sample move of the data.</div>
+      <button class="btn btn-run" id="run-migrate">Run sample migration</button>`;
+
+    document.getElementById('run-migrate').addEventListener('click', () => {
+      clearInterval(migrateTimer);
+      sets.forEach((s, i) => {
+        document.getElementById('cnt-' + i).textContent = '0 / ' + s.total;
+        document.getElementById('bar-' + i).style.width = '0';
+      });
+      const status = document.getElementById('mig-status');
+      status.classList.remove('done');
+      status.textContent = 'Copying records...';
+
+      let step = 0;
+      const steps = 40;
+      migrateTimer = setInterval(() => {
+        step++;
+        sets.forEach((s, i) => {
+          const n = Math.round(s.total * Math.min(1, step / steps));
+          document.getElementById('cnt-' + i).textContent = n + ' / ' + s.total;
+          document.getElementById('bar-' + i).style.width = (n / s.total * 100) + '%';
+        });
+        if (step >= steps) {
+          clearInterval(migrateTimer);
+          const total = sets.reduce((a, s) => a + s.total, 0);
+          status.classList.add('done');
+          status.textContent = `All ${total} records match the old system. Ready to switch over.`;
+        }
+      }, 60);
+    });
+  }
+
+  /* Custom: upgrade or rebuild */
+  function renderCustom() {
+    panel.innerHTML = `
+      <h3>Upgrade if it mostly works. Rebuild if it no longer fits.</h3>
+      <p>We build to your company's approval levels, roles, and reports. If your current system mostly works but falls short, we can upgrade or improve it rather than starting from scratch.</p>
+      <div class="seg" role="group" aria-label="Current system" id="custom-seg" style="margin-bottom:6px">
+        <button data-c="upgrade" aria-pressed="true">It mostly works</button>
+        <button data-c="rebuild" aria-pressed="false">It no longer fits</button>
+      </div>
+      <ul class="choice-list" id="choice-list"></ul>`;
+
+    const options = {
+      upgrade: [
+        'Keep your current data and screens',
+        'Add the approval levels or reports you are missing',
+        'Fix what slows your team down, without a full rebuild'
+      ],
+      rebuild: [
+        'Design the screens around how your team actually works',
+        'Move your existing records across, checked before switch-over',
+        'Connect to the other systems you use, such as leave or timesheets'
+      ]
+    };
+
+    function show(key) {
+      document.querySelectorAll('#custom-seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.c === key));
+      document.getElementById('choice-list').innerHTML = options[key].map(t => `<li>${t}</li>`).join('');
+    }
+
+    document.querySelectorAll('#custom-seg button').forEach(b => b.addEventListener('click', () => show(b.dataset.c)));
+    show('upgrade');
+  }
+
+  tabs.forEach(t => t.addEventListener('click', () => showPath(t.dataset.path)));
+  showPath('connect');
+
+  /* ---------- Build yours: quote ---------- */
+  const checks = document.querySelectorAll('#checks input');
+  const quoteList = document.getElementById('quote-list');
+  const shortlistField = document.getElementById('shortlist-field');
+
+  function drawQuote() {
+    quoteList.innerHTML = '';
+    const picked = [];
+    checks.forEach(c => {
+      if (!c.checked) return;
+      const label = c.closest('label').querySelector('strong').textContent;
+      picked.push(label);
+      const li = document.createElement('li');
+      li.textContent = label;
+      quoteList.appendChild(li);
+    });
+    if (!picked.length) {
+      const li = document.createElement('li');
+      li.textContent = 'Pick at least one item to build your shortlist.';
+      quoteList.appendChild(li);
+    }
+    shortlistField.value = picked.join(', ');
+  }
+
+  checks.forEach(c => c.addEventListener('change', drawQuote));
+  drawQuote();
+</script>
+
+</body>
+</html>

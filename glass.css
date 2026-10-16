@@ -1,0 +1,166 @@
+/* Glass layer. Loaded after each page's own styles, so it overrides them. */
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(96, 130, 255, .35) 0, transparent 42%),
+    radial-gradient(circle at 88% 22%, rgba(255, 214, 102, .40) 0, transparent 38%),
+    radial-gradient(circle at 60% 88%, rgba(94, 214, 180, .32) 0, transparent 44%),
+    radial-gradient(circle at 25% 70%, rgba(190, 150, 255, .22) 0, transparent 36%),
+    linear-gradient(135deg, #E4EAF6 0%, #F2F0F8 45%, #E9F3F0 100%);
+  background-attachment: fixed;
+}
+
+section, .block { scroll-margin-top: 96px; }
+
+/* Glass surfaces */
+.topbar {
+  background: rgba(255, 255, 255, .42);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border-bottom: 1px solid rgba(255, 255, 255, .75);
+  box-shadow: 0 6px 24px rgba(23, 32, 43, .06);
+}
+
+.card, .sheet, .door, .check, .leave-card, .leave-detail, .who, .cal, .day-panel,
+.chain .node, .chain-note, .team-bar, .seg, .role-wrap, .screens, .preview,
+.proj, .ts, .limit-table, .rate-panel, .explorer, .tabs, .panel, .flow button,
+.report-row, .note-box, .flow-note, .status, .quote, .staff-pick select,
+.cal-head button, .day-panel, .who-row, .ts input, .limit-table input, .checks,
+.services, .project-body, .page-hero, .balance-row, .day-picker button, .field select, .field input {
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+}
+
+.card, .sheet, .door, .check, .leave-card, .leave-detail, .who, .cal, .day-panel,
+.chain .node, .role-wrap, .proj, .ts, .limit-table, .rate-panel, .explorer, .panel,
+.preview, .screens, .tabs, .card {
+  background: rgba(255, 255, 255, .5);
+  border: 1px solid rgba(255, 255, 255, .8);
+  border-radius: 18px;
+  box-shadow: 0 10px 36px rgba(23, 32, 43, .10), inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+
+.sheet, .leave-detail, .quote, .who, .cal, .day-panel { border-radius: 18px; }
+.quote {
+  background: rgba(242, 210, 75, .55);
+  border: 1px solid rgba(255, 255, 255, .8);
+  box-shadow: 0 10px 36px rgba(180, 140, 20, .18), inset 0 1px 0 rgba(255, 255, 255, .6);
+}
+
+.door.tc {
+  background: rgba(23, 32, 43, .72);
+  border: 1px solid rgba(255, 255, 255, .18);
+  box-shadow: 0 14px 40px rgba(23, 32, 43, .25);
+}
+
+/* Lifts instead of hard offset shadows */
+.door:hover, .leave-card:hover, .proj:hover, .check:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 44px rgba(23, 32, 43, .18);
+}
+.leave-card[aria-expanded="true"] {
+  background: rgba(23, 32, 43, .78);
+  border-color: rgba(255, 255, 255, .15);
+}
+
+.seg { border: 1px solid rgba(255, 255, 255, .8); background: rgba(255, 255, 255, .35); }
+.seg button { background: transparent; border-right: 1px solid rgba(23, 32, 43, .12); }
+.seg button:hover { background: rgba(255, 255, 255, .6); }
+.seg button[aria-pressed="true"] { background: rgba(23, 32, 43, .86); color: #fff; }
+
+.btn {
+  background: rgba(23, 32, 43, .86);
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 22px rgba(23, 32, 43, .18);
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(23, 32, 43, .24); }
+.btn.ghost { background: rgba(255, 255, 255, .35); color: var(--ink); border: 1px solid rgba(23, 32, 43, .25); }
+.btn.ghost:hover { background: rgba(23, 32, 43, .86); color: #fff; }
+
+.screen-btn { background: rgba(255, 255, 255, .25); border-bottom: 1px solid rgba(23, 32, 43, .08); }
+.screen-btn[aria-selected="true"] { background: rgba(23, 32, 43, .86); color: #fff; }
+.screen-btn:hover:not(:disabled) { background: rgba(255, 255, 255, .6); }
+.tab { background: transparent; border-bottom: 1px solid rgba(23, 32, 43, .08); }
+.tab[aria-selected="true"] { background: rgba(23, 32, 43, .86); color: #fff; }
+.tab:hover { background: rgba(255, 255, 255, .55); }
+
+.field select, .field input[type="number"], .ts input, .limit-table input,
+.staff-pick select, .day-picker button, .flow button {
+  background: rgba(255, 255, 255, .55);
+  border: 1px solid rgba(23, 32, 43, .12);
+  border-radius: 10px;
+}
+.day-picker button.on { background: rgba(42, 79, 214, .85); border-color: transparent; color: #fff; }
+.flow button.active { background: rgba(42, 79, 214, .85); border-color: transparent; }
+
+.status { background: rgba(221, 229, 251, .6); border-radius: 12px; border-left-width: 4px; }
+.status.ok { background: rgba(220, 242, 227, .7); }
+.status.warn { background: rgba(253, 231, 228, .75); }
+.note-box, .flow-note, .chain-note { background: rgba(221, 229, 251, .55); border-radius: 14px; }
+
+.cal-day { background: rgba(255, 255, 255, .35); }
+.cal-day:disabled { background: rgba(255, 255, 255, .15); }
+.cal-day:hover:not(:disabled) { background: rgba(221, 229, 251, .75); }
+.cal-day.selected { background: rgba(221, 229, 251, .85); }
+.cal-dow { background: transparent; }
+.ts th, .limit-table th { background: rgba(255, 255, 255, .45); }
+.ts tfoot td { border-top: 1px solid rgba(23, 32, 43, .25); }
+
+.bar { background: rgba(255, 255, 255, .55); border: 1px solid rgba(23, 32, 43, .10); border-radius: 999px; height: 10px; }
+.bar-fill { border-radius: 999px; background: linear-gradient(90deg, #5B7FF0, #2A4FD6); }
+.bar-fill.mid { background: linear-gradient(90deg, #F7C25C, #D97706); }
+.bar-fill.over, .bar-fill.low { background: linear-gradient(90deg, #F47A6E, #B42318); }
+
+.pill { background: rgba(255, 255, 255, .6); border-radius: 999px; border-width: 1px; }
+
+.contact { background: rgba(23, 32, 43, .78); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-top: 1px solid rgba(255, 255, 255, .12); }
+footer { background: rgba(15, 22, 32, .75); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+
+.hero h1 .strike, .page-hero h1 .strike {
+  background-image: linear-gradient(rgba(242, 210, 75, .75), rgba(242, 210, 75, .75));
+  border-radius: 6px;
+}
+.topbar nav a[aria-current="page"] { color: var(--blue); }
+
+/* Enquiry form */
+.enquiry { margin-top: 28px; display: grid; gap: 14px; max-width: 720px; }
+.enquiry-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.enquiry textarea {
+  width: 100%; box-sizing: border-box; font: inherit; padding: 12px 14px;
+  background: rgba(255,255,255,.55); border: 1px solid rgba(23,32,43,.12); border-radius: 10px; color: var(--ink);
+}
+.enquiry .btn { justify-self: start; }
+@media (max-width: 640px) { .enquiry-grid { grid-template-columns: 1fr; } }
+
+/* Wordmark: inline logo, aligned with the name */
+.wordmark { display: inline-flex; align-items: center; gap: 10px; }
+.wordmark svg { width: 28px; height: 28px; flex-shrink: 0; display: block; }
+
+/* Enquiry form on the dark contact band */
+.contact .enquiry label { display: block; font-size: 14px; font-weight: 600; color: #E6EAF2; margin-bottom: 6px; }
+.contact .enquiry input:not([type="hidden"]), .contact .enquiry textarea {
+  width: 100%; box-sizing: border-box; height: 46px; padding: 0 14px;
+  font: inherit; font-size: 15px; color: #FFFFFF;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.22); border-radius: 10px; outline: none;
+}
+.contact .enquiry textarea { height: auto; min-height: 110px; padding: 12px 14px; resize: vertical; }
+.contact .enquiry input:focus, .contact .enquiry textarea:focus { border-color: #F2D24B; background: rgba(255,255,255,.14); }
+.contact .enquiry input::placeholder, .contact .enquiry textarea::placeholder { color: rgba(255,255,255,.45); }
+.contact .enquiry .btn { height: 48px; padding: 0 24px; }
+
+/* Shortlist button spacing */
+.quote .btn { display: inline-block; margin-top: 14px; }
+
+/* Phone header: keep the name on one line and let the menu wrap neatly */
+.wordmark { white-space: nowrap; }
+@media (max-width: 640px) {
+  .topbar { flex-wrap: wrap; row-gap: 8px; }
+  .topbar nav { flex-wrap: wrap; gap: 4px 14px; }
+  .topbar nav a { font-size: 14px; }
+}
+
+/* Logo name only: its own display font. Body text stays Schibsted Grotesk. */
+.wordmark span { font-family: "Unbounded", system-ui, sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.02em; }

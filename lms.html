@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leave Management System · My Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;900&family=Unbounded:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Leave cards */
+  .staff-pick { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 26px; }
+  .staff-pick select { padding: 10px 12px; border: 2px solid var(--ink); background: var(--white); min-width: 240px; }
+  .leave-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .leave-card {
+    background: var(--white); border: 1px solid var(--ink); padding: 20px; text-align: left; display: block; width: 100%;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .leave-card:hover { transform: translate(-3px,-3px); box-shadow: 6px 6px 0 var(--ink); }
+  .leave-card[aria-expanded="true"] { background: var(--ink); color: var(--paper); }
+  .leave-card[aria-expanded="true"] .muted { color: #B9C2CF; }
+  .leave-card .big { font-size: 40px; font-weight: 900; letter-spacing: -0.03em; line-height: 1; margin: 10px 0 4px; }
+  .leave-card .bar { margin: 12px 0 8px; }
+  .leave-card[aria-expanded="true"] .bar { background: #2B3644; border-color: #2B3644; }
+  .leave-card .label { font-size: 15px; font-weight: 700; }
+  .leave-detail { grid-column: 1 / -1; background: var(--white); border: 1px solid var(--ink); padding: 22px; border-top: 4px solid var(--blue); }
+  .leave-detail ul { list-style: none; display: grid; gap: 0; margin-top: 12px; }
+  .leave-detail li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--rule); font-size: 15px; }
+
+  /* Approval levels */
+  .levels-head { display: flex; justify-content: space-between; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 30px; }
+  .levels-head p { font-size: 15px; color: var(--ink-soft); max-width: 40ch; }
+  .chain { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; align-items: stretch; }
+  .chain .node {
+    background: var(--white); border: 1px solid var(--rule); padding: 16px 14px; min-height: 124px;
+    transition: background .35s, border-color .35s, color .35s, opacity .35s; opacity: .35;
+  }
+  .chain .node.on { opacity: 1; border-color: var(--ink); }
+  .chain .node.done { background: var(--green-wash); border-color: var(--green); opacity: 1; }
+  .chain .node.now { background: var(--blue); color: var(--white); border-color: var(--blue); opacity: 1; }
+  .chain .node .lvl { font-size: 13px; font-weight: 700; }
+  .chain .node h4 { font-size: 17px; margin: 6px 0 4px; }
+  .chain .node small { font-size: 13px; opacity: .85; }
+  .chain .arrow { display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--ink-soft); }
+  .chain .arrow.hidden { visibility: hidden; }
+  .chain-result { margin-top: 22px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .chain-note { padding: 16px 18px; background: var(--blue-wash); border-left: 4px solid var(--blue); font-size: 15px; flex: 1; min-width: 260px; }
+
+  /* Who's on leave */
+  .team-bar { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+  .who { background: var(--white); border: 1px solid var(--ink); }
+  .who-row { display: grid; grid-template-columns: 44px minmax(0,1fr) auto auto; gap: 14px; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--rule); transition: background .2s; }
+  .who-row:last-child { border-bottom: 0; }
+  .who-row:hover { background: var(--paper); }
+  .avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--ink); color: var(--paper); display: grid; place-items: center; font-weight: 700; font-size: 15px; }
+  .who-row strong { display: block; font-size: 16px; }
+  .who-row .muted { font-size: 14px; }
+  .who-empty { padding: 22px 18px; color: var(--ink-soft); }
+
+  /* Calendar */
+  .cal-wrap { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+  .cal { background: var(--white); border: 1px solid var(--ink); }
+  .cal-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 2px solid var(--ink); }
+  .cal-head h3 { font-size: 20px; letter-spacing: -0.01em; }
+  .cal-head button { width: 38px; height: 38px; border: 1px solid var(--ink); background: var(--white); font-size: 18px; transition: background .2s; }
+  .cal-head button:hover { background: var(--ink); color: var(--paper); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal-dow { padding: 10px 0; text-align: center; font-size: 13px; color: var(--ink-soft); border-bottom: 1px solid var(--rule); }
+  .cal-day {
+    min-height: 66px; padding: 8px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+    background: var(--white); text-align: left; position: relative; transition: background .15s;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .cal-day:nth-child(7n) { border-right: 0; }
+  .cal-day:hover:not(:disabled) { background: var(--blue-wash); }
+  .cal-day:disabled { background: var(--paper); color: #A5AEBB; cursor: default; }
+  .cal-day.today .num { background: var(--ink); color: var(--paper); }
+  .cal-day.selected { outline: 3px solid var(--blue); outline-offset: -3px; background: var(--blue-wash); }
+  .cal-day .num { font-size: 14px; font-weight: 700; width: 26px; height: 26px; display: grid; place-items: center; }
+  .cal-day .dots { display: flex; gap: 4px; flex-wrap: wrap; }
+  .cal-day .dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); display: block; }
+  .cal-day .dots i.a { background: var(--amber); }
+  .cal-day .dots i.m { background: var(--red); }
+  .cal-day .dots i.e { background: var(--green); }
+  .cal-legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 12px 18px; font-size: 13px; color: var(--ink-soft); border-top: 1px solid var(--rule); }
+  .cal-legend span { display: inline-flex; gap: 6px; align-items: center; }
+  .cal-legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .day-panel { background: var(--white); border: 1px solid var(--ink); padding: 22px; min-height: 280px; }
+  .day-panel h3 { font-size: 20px; letter-spacing: -0.01em; margin-bottom: 4px; }
+  .day-panel .cnt { font-size: 14px; color: var(--ink-soft); margin-bottom: 14px; }
+
+  @media (max-width: 960px) {
+    .leave-cards { grid-template-columns: 1fr 1fr; }
+    .chain { grid-template-columns: 1fr !important; gap: 8px; }
+    .chain .arrow { display: none; }
+    .cal-wrap { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .leave-cards { grid-template-columns: 1fr; }
+    .who-row { grid-template-columns: 44px minmax(0,1fr) auto; }
+    .who-row .tag-col { display: none; }
+  }
+</style>
+<link rel="stylesheet" href="glass.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="wordmark" href="index.html"><svg width="28" height="28" viewBox="0 0 64 64" role="img" aria-label="My Studio logo" aria-hidden="false"><defs><linearGradient id="logo-tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B7FF0"/><stop offset="1" stop-color="#2A4FD6"/></linearGradient></defs><rect x="4" y="4" width="56" height="56" rx="16" fill="url(#logo-tile)"/><circle cx="32" cy="26" r="16" fill="#FFFFFF" fill-opacity="0.12"/><circle cx="32" cy="25" r="11" fill="#F2D24B"/><rect x="27" y="33" width="10" height="6" rx="2" fill="#F2D24B"/><path d="M27.5 27.5 L30 21.5 L32 25.5 L34 21.5 L36.5 27.5" fill="none" stroke="#2A4FD6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><rect x="24" y="44" width="16" height="4.5" rx="2.25" fill="#FFFFFF"/><rect x="27" y="50" width="10" height="4" rx="2" fill="#FFFFFF" fill-opacity="0.7"/><path d="M48 10 L49.3 13.7 L53 15 L49.3 16.3 L48 20 L46.7 16.3 L43 15 L46.7 13.7 Z" fill="#F2D24B"/></svg><span>My Studio</span></a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="lms.html" aria-current="page">Leave system</a>
+    <a href="timecost360.html">Time Cost 360</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <div class="page-hero">
+    <p class="kicker">Product · Employee Hub (LMS)</p>
+    <h1>Leave, approvals and who is away, in one place.</h1>
+    <p class="lede">We built this for a company of about 100 staff. Balances, requests and approvals live in one system, and approvals follow the reporting lines your company already uses.</p>
+  </div>
+
+  <!-- STAFF LEAVE CARDS -->
+  <section class="block" id="cards">
+    <p class="kicker">Step 1</p>
+    <h2>Each person sees their own leave at a glance.</h2>
+    <p class="sub">Pick a staff member to load their balances. Select a card to see the leave taken under that type.</p>
+
+    <div class="staff-pick">
+      <label for="staff" class="muted">Staff member</label>
+      <select id="staff"></select>
+    </div>
+
+    <div class="leave-cards" id="leave-cards"></div>
+  </section>
+
+  <!-- APPROVAL LEVELS -->
+  <section class="block" id="levels">
+    <p class="kicker">Step 2</p>
+    <h2>Approval levels are set for each client.</h2>
+    <p class="sub">Some companies approve leave once, others go up two or three levels. Choose a setup below and send a sample request through it.</p>
+
+    <div class="levels-head">
+      <div class="seg" role="group" aria-label="Number of approval levels" id="level-seg">
+        <button data-level="1" aria-pressed="false">1 level</button>
+        <button data-level="2" aria-pressed="true">2 levels</button>
+        <button data-level="3" aria-pressed="false">3 levels</button>
+      </div>
+      <p>Each level is a step the request must pass before the balance is deducted.</p>
+    </div>
+
+    <div class="chain" id="chain"></div>
+
+    <div class="chain-result">
+      <button class="btn" id="send-sample">Send a sample request</button>
+      <div class="chain-note" id="chain-note" aria-live="polite">Press the button to see the request move through each level.</div>
+    </div>
+  </section>
+
+  <!-- WHO IS ON LEAVE -->
+  <section class="block" id="who">
+    <p class="kicker">Step 3</p>
+    <h2>Who is away today, and who is coming up.</h2>
+    <p class="sub">Managers see only their own team. Filter by team to check cover before a meeting.</p>
+
+    <div class="team-bar">
+      <div class="seg" role="group" aria-label="Filter by team" id="team-seg">
+        <button data-team="all" aria-pressed="true">All teams</button>
+        <button data-team="Operations" aria-pressed="false">Operations</button>
+        <button data-team="Finance" aria-pressed="false">Finance</button>
+        <button data-team="Sales" aria-pressed="false">Sales</button>
+      </div>
+      <span class="muted mono" id="who-count"></span>
+    </div>
+
+    <div class="who" id="who-list"></div>
+  </section>
+
+  <!-- CALENDAR -->
+  <section class="block" id="calendar">
+    <p class="kicker">Step 4</p>
+    <h2>A calendar that shows who is away each day.</h2>
+    <p class="sub">Dots show how many people are on leave. Select a day to see who, and what type.</p>
+
+    <div class="cal-wrap">
+      <div class="cal">
+        <div class="cal-head">
+          <button id="prev" aria-label="Previous month">‹</button>
+          <h3 id="cal-title"></h3>
+          <button id="next" aria-label="Next month">›</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-legend">
+          <span><i style="background:var(--blue)"></i>Annual</span>
+          <span><i style="background:var(--red)"></i>Medical</span>
+          <span><i style="background:var(--green)"></i>Emergency</span>
+          <span><i style="background:var(--amber)"></i>Unpaid</span>
+        </div>
+      </div>
+
+      <div class="day-panel" id="day-panel" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="block contact">
+    <h2>Want a leave system that fits your approval chain?</h2>
+    <p class="lead">Tell us your company size and how many approval levels you need. We reply within two working days.</p>
+    <a class="btn" href="index.html#contact">Tell us about your company →</a>
+  </section>
+
+</main>
+
+<footer>
+  <p>My Studio. Systems built for small and mid-sized companies.</p>
+</footer>
+
+<script>
+  /* ----- Demo data (fictional) ----- */
+  const TODAY = new Date(2026, 9, 13); // 13 Oct 2026, fixed for the demo
+
+  const staff = [
+    { id: 1, name: 'Aina Sofea', team: 'Operations', role: 'Staff', entitle: { annual: 12, medical: 14, emergency: 2 }, used: { annual: 4, medical: 0, emergency: 1 } },
+    { id: 2, name: 'Daniel Tan', team: 'Finance', role: 'Team lead', entitle: { annual: 12, medical: 14, emergency: 2 }, used: { annual: 9, medical: 2, emergency: 0 } },
+    { id: 3, name: 'Mei Ling', team: 'Finance', role: 'Staff', entitle: { annual: 12, medical: 14, emergency: 2 }, used: { annual: 3, medical: 1, emergency: 0 } },
+    { id: 4, name: 'Ravi Kumar', team: 'Sales', role: 'Line manager', entitle: { annual: 12, medical: 14, emergency: 2 }, used: { annual: 7, medical: 0, emergency: 0 } },
+    { id: 5, name: 'Nurul Hana', team: 'Operations', role: 'Staff', entitle: { annual: 12, medical: 14, emergency: 2 }, used: { annual: 2, medical: 0, emergency: 1 } },
+    { id: 6, name: 'Syafiq Ali', team: 'Sales', role: 'Staff', entitle: { annual: 12, medical: 14, emergency: 2 }, used: { annual: 5, medical: 0, emergency: 0 } }
+  ];
+
+  const TYPES = {
+    annual:    { label: 'Annual',    color: 'var(--blue)' },
+    medical:   { label: 'Medical',   color: 'var(--red)' },
+    emergency: { label: 'Emergency', color: 'var(--green)' },
+    unpaid:    { label: 'Unpaid',    color: 'var(--amber)' }
+  };
+
+  // Leave records: person id, type, start, end (inclusive)
+  const leaves = [
+    { p: 2, t: 'annual',    s: [2026, 9, 12], e: [2026, 9, 14] },
+    { p: 3, t: 'medical',   s: [2026, 9, 13], e: [2026, 9, 13] },
+    { p: 4, t: 'annual',    s: [2026, 9, 19], e: [2026, 9, 23] },
+    { p: 5, t: 'emergency', s: [2026, 9, 8],  e: [2026, 9, 8] },
+    { p: 6, t: 'annual',    s: [2026, 9, 20], e: [2026, 9, 20] },
+    { p: 1, t: 'annual',    s: [2026, 9, 26], e: [2026, 9, 30] },
+    { p: 2, t: 'annual',    s: [2026, 10, 3], e: [2026, 10, 3] },
+    { p: 3, t: 'unpaid',    s: [2026, 9, 21], e: [2026, 9, 21] }
+  ];
+
+  const toDate = a => new Date(a[0], a[1], a[2]);
+  const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  const onLeave = (date) => leaves.filter(l => { const s = toDate(l.s), e = toDate(l.e); return date >= s && date <= e; });
+  const personById = id => staff.find(s => s.id === id);
+  const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+  const initials = name => name.split(' ').map(x => x[0]).join('');
+
+  /* ----- 1. Leave cards ----- */
+  const staffSel = document.getElementById('staff');
+  const cardsEl = document.getElementById('leave-cards');
+  let openType = null;
+
+  staff.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id; o.textContent = s.name + ' · ' + s.team;
+    staffSel.appendChild(o);
+  });
+
+  function renderCards() {
+    const p = personById(Number(staffSel.value));
+    cardsEl.innerHTML = '';
+    Object.keys(TYPES).filter(k => k !== 'unpaid').forEach(k => {
+      const cap = p.entitle[k], used = p.used[k], left = cap - used;
+      const pct = Math.min(100, (used / cap) * 100);
+      const cls = left <= 0 ? 'low' : left <= 2 ? 'mid' : '';
+
+      const btn = document.createElement('button');
+      btn.className = 'leave-card rise';
+      btn.setAttribute('aria-expanded', openType === k ? 'true' : 'false');
+      btn.innerHTML = `
+        <span class="label">${TYPES[k].label} leave</span>
+        <div class="big">${left}</div>
+        <div class="muted" style="font-size:14px">days left of ${cap}</div>
+        <div class="bar"><div class="bar-fill ${cls}" style="width:0"></div></div>
+        <div class="muted" style="font-size:13px">${used} used this year</div>`;
+      btn.addEventListener('click', () => { openType = openType === k ? null : k; renderCards(); });
+      cardsEl.appendChild(btn);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        btn.querySelector('.bar-fill').style.width = pct + '%';
+      }));
+
+      if (openType === k) {
+        const detail = document.createElement('div');
+        detail.className = 'leave-detail rise';
+        const rows = leaves.filter(l => l.p === p.id && l.t === k);
+        detail.innerHTML = `<strong>${TYPES[k].label} leave for ${p.name}</strong>
+          <ul>${rows.length ? rows.map(r => {
+            const s = toDate(r.s), e = toDate(r.e);
+            const range = sameDay(s, e) ? s.toDateString().slice(4, 10) : s.toDateString().slice(4, 10) + ' to ' + e.toDateString().slice(4, 10);
+            return `<li><span>${range}</span><span class="muted">${plural(((e - s) / 864e5) + 1, 'day')}</span></li>`;
+          }).join('') : '<li><span class="muted">No leave of this type recorded.</span></li>'}</ul>`;
+        cardsEl.appendChild(detail);
+      }
+    });
+    const unpaid = leaves.filter(l => l.p === p.id && l.t === 'unpaid').length;
+    if (unpaid) {
+      const note = document.createElement('p');
+      note.className = 'muted';
+      note.style.gridColumn = '1 / -1';
+      note.textContent = `Unpaid leave: ${plural(unpaid, 'record')} this year. Unpaid leave has no balance, so no card is shown.`;
+      cardsEl.appendChild(note);
+    }
+  }
+  staffSel.addEventListener('change', () => { openType = null; renderCards(); });
+
+  /* ----- 2. Approval levels ----- */
+  const LEVELS = {
+    1: [ ['L1', 'Line manager', 'Approves the request and the balance is updated.'] ],
+    2: [ ['L1', 'Team lead', 'First check that the team is covered.'],
+         ['L2', 'Line manager', 'Final approval. The balance is then updated.'] ],
+    3: [ ['L1', 'Team lead', 'First check that the team is covered.'],
+         ['L2', 'Line manager', 'Checks the request against the team plan.'],
+         ['L3', 'Head of dept', 'Final approval for longer or sensitive leave.'] ]
+  };
+
+  const chain = document.getElementById('chain');
+  const chainNote = document.getElementById('chain-note');
+  const sendBtn = document.getElementById('send-sample');
+  const levelBtns = document.querySelectorAll('#level-seg button');
+  let level = 2, timers = [];
+
+  function drawChain(stage) {
+    const steps = LEVELS[level];
+    chain.innerHTML = '';
+    const cols = [];
+    cols.push({ html: `<div class="node ${stage >= 0 ? 'done' : 'on'}"><div class="lvl">Start</div><h4>Staff request</h4><small>Balance is checked first</small></div>` });
+    steps.forEach((s, i) => {
+      const cls = stage > i ? 'done' : stage === i ? 'now' : 'on';
+      cols.push({ html: `<div class="node ${cls}"><div class="lvl">${s[0]}</div><h4>${s[1]}</h4><small>${s[2]}</small></div>` });
+    });
+    cols.push({ html: `<div class="node ${stage >= steps.length ? 'done' : ''}"><div class="lvl">End</div><h4>Balance updated</h4><small>Leave is written to records</small></div>` });
+
+    // one column per node, with an arrow between nodes; the grid fits the setup chosen
+    chain.style.gridTemplateColumns = Array.from({ length: cols.length * 2 - 1 }, (_, j) => j % 2 === 0 ? 'minmax(0, 1fr)' : '28px').join(' ');
+    cols.forEach((c, i) => {
+      if (i > 0) chain.insertAdjacentHTML('beforeend', '<div class="arrow">→</div>');
+      chain.insertAdjacentHTML('beforeend', c.html);
+    });
+  }
+
+  function setLevel(n) {
+    level = n;
+    levelBtns.forEach(b => b.setAttribute('aria-pressed', Number(b.dataset.level) === n));
+    timers.forEach(clearTimeout); timers = [];
+    drawChain(-1);
+    chainNote.textContent = `This client uses ${n} approval ${n === 1 ? 'level' : 'levels'}. Press the button to send a sample request.`;
+  }
+
+  levelBtns.forEach(b => b.addEventListener('click', () => setLevel(Number(b.dataset.level))));
+
+  sendBtn.addEventListener('click', () => {
+    timers.forEach(clearTimeout); timers = [];
+    drawChain(-1);
+    chainNote.textContent = 'Request submitted.';
+    const steps = LEVELS[level].length;
+    for (let i = 0; i < steps; i++) {
+      timers.push(setTimeout(() => {
+        drawChain(i);
+        chainNote.textContent = `Waiting at ${LEVELS[level][i][1]} (${LEVELS[level][i][0]}).`;
+      }, 600 + i * 900));
+    }
+    timers.push(setTimeout(() => {
+      drawChain(steps);
+      chainNote.textContent = 'Approved at every level. Balance updated and leave written to records.';
+    }, 600 + steps * 900));
+  });
+
+  /* ----- 3. Who is on leave ----- */
+  const whoList = document.getElementById('who-list');
+  const whoCount = document.getElementById('who-count');
+  const teamBtns = document.querySelectorAll('#team-seg button');
+  let team = 'all';
+
+  function renderWho() {
+    const rows = leaves
+      .filter(l => onLeave(TODAY).includes(l))
+      .map(l => ({ ...l, person: personById(l.p) }))
+      .filter(r => team === 'all' || r.person.team === team);
+    whoCount.textContent = plural(rows.length, 'person') + ' away today';
+    if (!rows.length) {
+      whoList.innerHTML = '<div class="who-empty">Nobody in this team is away today.</div>';
+      return;
+    }
+    whoList.innerHTML = rows.map(r => {
+      const e = toDate(r.e);
+      const until = sameDay(e, TODAY) ? 'Back tomorrow' : 'Back ' + toDate(r.e).toDateString().slice(4, 10);
+      return `<div class="who-row rise">
+        <div class="avatar">${initials(r.person.name)}</div>
+        <div><strong>${r.person.name}</strong><span class="muted">${r.person.role}</span></div>
+        <span class="pill info tag-col">${TYPES[r.t].label}</span>
+        <span class="mono muted">${until}</span>
+      </div>`;
+    }).join('');
+  }
+
+  teamBtns.forEach(b => b.addEventListener('click', () => {
+    team = b.dataset.team;
+    teamBtns.forEach(x => x.setAttribute('aria-pressed', x === b));
+    renderWho();
+  }));
+
+  /* ----- 4. Calendar ----- */
+  const calGrid = document.getElementById('cal-grid');
+  const calTitle = document.getElementById('cal-title');
+  const dayPanel = document.getElementById('day-panel');
+  let view = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+  let selected = new Date(TODAY);
+
+  function dotsFor(date) {
+    const hits = onLeave(date);
+    if (!hits.length) return '';
+    return '<div class="dots">' + hits.map(h => `<i class="${h.t === 'medical' ? 'm' : h.t === 'emergency' ? 'e' : h.t === 'unpaid' ? 'a' : ''}"></i>`).join('') + '</div>';
+  }
+
+  function renderCal() {
+    calTitle.textContent = view.toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+    calGrid.innerHTML = '';
+    ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d => {
+      const el = document.createElement('div'); el.className = 'cal-dow'; el.textContent = d; calGrid.appendChild(el);
+    });
+    const first = new Date(view.getFullYear(), view.getMonth(), 1);
+    const offset = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+
+    for (let i = 0; i < offset; i++) calGrid.insertAdjacentHTML('beforeend', '<div class="cal-day" style="background:var(--paper);cursor:default"></div>');
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(view.getFullYear(), view.getMonth(), d);
+      const btn = document.createElement('button');
+      btn.className = 'cal-day';
+      if (sameDay(date, TODAY)) btn.classList.add('today');
+      if (sameDay(date, selected)) btn.classList.add('selected');
+      btn.innerHTML = `<span class="num">${d}</span>${dotsFor(date)}`;
+      btn.addEventListener('click', () => { selected = date; renderCal(); renderDay(); });
+      calGrid.appendChild(btn);
+    }
+  }
+
+  function renderDay() {
+    const hits = onLeave(selected);
+    const title = selected.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+    dayPanel.innerHTML = `
+      <h3>${title}</h3>
+      <p class="cnt">${hits.length ? plural(hits.length, 'person') + ' on leave' : 'Nobody on leave this day'}</p>
+      ${hits.map(h => {
+        const p = personById(h.p);
+        return `<div class="who-row" style="grid-template-columns:44px minmax(0,1fr) auto;padding:12px 0;border-bottom:1px solid var(--rule)">
+          <div class="avatar">${initials(p.name)}</div>
+          <div><strong>${p.name}</strong><span class="muted">${p.team}</span></div>
+          <span class="pill ${h.t === 'medical' ? 'bad' : h.t === 'emergency' ? 'ok' : h.t === 'unpaid' ? 'warn' : 'info'}">${TYPES[h.t].label}</span>
+        </div>`;
+      }).join('')}`;
+  }
+
+  document.getElementById('prev').addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); renderCal(); });
+  document.getElementById('next').addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); renderCal(); });
+
+  /* ----- Init ----- */
+  renderCards();
+  setLevel(2);
+  renderWho();
+  renderCal();
+  renderDay();
+</script>
+</body>
+</html>

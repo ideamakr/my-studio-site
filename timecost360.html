@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Time Cost 360 · My Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;900&family=Unbounded:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Role access */
+  .role-wrap { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr); overflow: hidden; }
+  .screens { border-right: 1px solid rgba(255,255,255,.8); }
+  .screen-btn {
+    width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 16px 20px; background: transparent; border: 0; border-bottom: 1px solid rgba(23,32,43,.08);
+    text-align: left; font-size: 16px; font-weight: 700; transition: background .2s, padding-left .25s;
+  }
+  .screen-btn:hover:not(:disabled) { padding-left: 26px; }
+  .screen-btn[aria-selected="true"] { color: #fff; }
+  .screen-btn:disabled { color: #8A94A3; cursor: not-allowed; }
+  .screen-btn .lock { font-size: 13px; font-weight: 400; }
+  .preview { padding: clamp(22px, 3vw, 34px); min-height: 380px; }
+  .preview h3 { font-size: 24px; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .preview > p.muted { margin-bottom: 20px; font-size: 15px; }
+  .note-box { margin-top: 18px; padding: 14px 16px; font-size: 15px; }
+  .row-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(23,32,43,.1); font-size: 15px; gap: 12px; }
+
+  /* Project board */
+  .board-top { display: flex; justify-content: space-between; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 22px; }
+  .rate { display: flex; gap: 14px; align-items: center; font-size: 15px; }
+  .rate input { width: 180px; accent-color: var(--blue); }
+  .rate output { font-weight: 700; min-width: 90px; }
+  .proj-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .proj {
+    padding: 20px; text-align: left; display: block; width: 100%;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .proj[aria-expanded="true"] { border-top: 6px solid var(--blue); }
+  .proj h3 { font-size: 19px; letter-spacing: -0.01em; }
+  .proj .figs { display: flex; justify-content: space-between; font-size: 14px; color: var(--ink-soft); margin-top: 12px; }
+  .proj .bar { margin-top: 10px; }
+  .proj .team-hours { margin-top: 14px; border-top: 1px dashed rgba(23,32,43,.2); padding-top: 12px; font-size: 14px; }
+  .proj .team-hours div { display: flex; justify-content: space-between; padding: 4px 0; }
+  .proj-wide { grid-column: 1 / -1; }
+
+  /* Timesheet */
+  .ts { width: 100%; border-collapse: collapse; font-size: 15px; overflow: hidden; }
+  .ts th, .ts td { padding: 10px 12px; border-bottom: 1px solid rgba(23,32,43,.1); text-align: center; }
+  .ts th { font-size: 13px; color: var(--ink-soft); font-weight: 700; }
+  .ts th:first-child, .ts td:first-child { text-align: left; }
+  .ts tfoot td { font-weight: 900; }
+  .ts input { width: 64px; padding: 8px; text-align: center; font-family: "JetBrains Mono", monospace; }
+  .ts input:focus, .limit-table input:focus { outline: 2px solid var(--blue); outline-offset: 0; }
+  .ts-actions { display: flex; gap: 14px; align-items: center; margin-top: 18px; flex-wrap: wrap; }
+  .ts-status { font-size: 15px; }
+
+  /* Budget limits */
+  .limit-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .limit-table th, .limit-table td { padding: 12px; border-bottom: 1px solid rgba(23,32,43,.1); text-align: left; vertical-align: middle; }
+  .limit-table th { font-size: 13px; color: var(--ink-soft); }
+  .limit-table input { width: 130px; padding: 8px; font-family: "JetBrains Mono", monospace; }
+  .limit-table .bar { min-width: 160px; }
+  .budget-totals { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; margin-bottom: 22px; }
+  .budget-totals .card { padding: 18px; }
+  .budget-totals .big { font-size: 30px; font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; }
+  .budget-totals .lbl { font-size: 14px; color: var(--ink-soft); margin-top: 4px; }
+
+  /* Analysis */
+  .analysis { margin-top: 26px; padding: clamp(20px, 3vw, 30px); }
+  .analysis-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+  .analysis-head h3 { font-size: 22px; letter-spacing: -0.01em; }
+  .analysis-head p { font-size: 14px; color: var(--ink-soft); }
+  .chart-row { display: grid; grid-template-columns: 180px minmax(0,1fr) 140px; gap: 16px; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(23,32,43,.08); }
+  .chart-row:last-child { border-bottom: 0; }
+  .chart-row .name { font-size: 15px; font-weight: 700; }
+  .chart-track { position: relative; height: 22px; background: rgba(255,255,255,.6); border: 1px solid rgba(23,32,43,.10); border-radius: 999px; overflow: visible; }
+  .chart-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(90deg, #5B7FF0, #2A4FD6); transition: width .5s cubic-bezier(.2,.7,.2,1), background .3s; }
+  .chart-fill.over { background: linear-gradient(90deg, #F47A6E, #B42318); }
+  .chart-mark { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--ink); transition: left .5s cubic-bezier(.2,.7,.2,1); }
+  .chart-mark::after { content: "budget"; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--ink-soft); white-space: nowrap; }
+  .chart-val { font-family: "JetBrains Mono", monospace; font-size: 13px; text-align: right; }
+  .stack { display: flex; height: 22px; border-radius: 999px; overflow: hidden; border: 1px solid rgba(23,32,43,.10); background: rgba(255,255,255,.6); }
+  .stack span { height: 100%; transition: width .5s cubic-bezier(.2,.7,.2,1); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 18px; font-size: 13px; color: var(--ink-soft); }
+  .legend span { display: inline-flex; gap: 6px; align-items: center; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .analysis-foot { margin-top: 18px; font-size: 14px; color: var(--ink-soft); }
+
+  @media (max-width: 960px) {
+    .role-wrap { grid-template-columns: 1fr; }
+    .screens { border-right: 0; border-bottom: 1px solid rgba(255,255,255,.8); display: flex; overflow-x: auto; }
+    .screen-btn { white-space: nowrap; width: auto; border-bottom: 0; border-right: 1px solid rgba(23,32,43,.08); }
+    .proj-grid { grid-template-columns: 1fr 1fr; }
+    .budget-totals { grid-template-columns: 1fr; }
+    .chart-row { grid-template-columns: 1fr; gap: 6px; }
+    .chart-val { text-align: left; }
+  }
+  @media (max-width: 600px) {
+    .proj-grid { grid-template-columns: 1fr; }
+  }
+</style>
+<link rel="stylesheet" href="glass.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="wordmark" href="index.html"><svg width="28" height="28" viewBox="0 0 64 64" role="img" aria-label="My Studio logo" aria-hidden="false"><defs><linearGradient id="logo-tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B7FF0"/><stop offset="1" stop-color="#2A4FD6"/></linearGradient></defs><rect x="4" y="4" width="56" height="56" rx="16" fill="url(#logo-tile)"/><circle cx="32" cy="26" r="16" fill="#FFFFFF" fill-opacity="0.12"/><circle cx="32" cy="25" r="11" fill="#F2D24B"/><rect x="27" y="33" width="10" height="6" rx="2" fill="#F2D24B"/><path d="M27.5 27.5 L30 21.5 L32 25.5 L34 21.5 L36.5 27.5" fill="none" stroke="#2A4FD6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><rect x="24" y="44" width="16" height="4.5" rx="2.25" fill="#FFFFFF"/><rect x="27" y="50" width="10" height="4" rx="2" fill="#FFFFFF" fill-opacity="0.7"/><path d="M48 10 L49.3 13.7 L53 15 L49.3 16.3 L48 20 L46.7 16.3 L43 15 L46.7 13.7 Z" fill="#F2D24B"/></svg><span>My Studio</span></a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="lms.html">Leave system</a>
+    <a href="timecost360.html" aria-current="page">Time Cost 360</a>
+    <a href="index.html#contact">Contact</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <div class="page-hero">
+    <p class="kicker">Product · Time Cost 360, Phase 1</p>
+    <h1>See which projects make money, before the month closes.</h1>
+    <p class="lede">Legacy TimeCost showed hours. Time Cost 360 shows cost against budget, and each person sees only what their role allows.</p>
+  </div>
+
+  <!-- STEP 1: ROLES -->
+  <section class="block" id="roles">
+    <p class="kicker">Step 1</p>
+    <h2>Each role sees its own screens.</h2>
+    <p class="sub">Choose a role to see what it can open. Locked screens stay visible so you can see what the next level unlocks.</p>
+
+    <div class="seg" role="group" aria-label="Role" id="role-seg" style="margin-bottom:22px">
+      <button data-role="staff" aria-pressed="true">Employee</button>
+      <button data-role="manager" aria-pressed="false">Manager (L1/L2)</button>
+      <button data-role="hod" aria-pressed="false">HOD / Admin</button>
+    </div>
+
+    <div class="role-wrap">
+      <div class="screens" role="tablist" id="screens"></div>
+      <div class="preview" id="preview" role="tabpanel"></div>
+    </div>
+  </section>
+
+  <!-- STEP 2: PROJECT BOARD -->
+  <section class="block" id="projects">
+    <p class="kicker">Step 2</p>
+    <h2>Project cost against budget, with the rate you choose.</h2>
+    <p class="sub">Move the team rate and the cost updates on every project. Select a project to see the hours by person.</p>
+
+    <div class="board-top">
+      <div class="seg" role="group" aria-label="Filter projects" id="proj-seg">
+        <button data-f="all" aria-pressed="true">All</button>
+        <button data-f="loss" aria-pressed="false">Losing money</button>
+        <button data-f="ok" aria-pressed="false">On budget</button>
+      </div>
+      <label class="rate">
+        <span class="muted">Team rate</span>
+        <input type="range" id="rate" min="60" max="150" step="5" value="95" aria-label="Team hourly rate">
+        <output id="rate-out" for="rate">RM 95 / hr</output>
+      </label>
+    </div>
+
+    <div class="proj-grid" id="proj-grid"></div>
+  </section>
+
+  <!-- STEP 3: TIMESHEET -->
+  <section class="block" id="timesheet">
+    <p class="kicker">Step 3</p>
+    <h2>Staff log hours in a week, and the total updates as they type.</h2>
+    <p class="sub">Each person sees only the projects they are assigned to. Submit goes to the line manager.</p>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="ts" id="ts">
+        <thead><tr><th>Project</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Total</th></tr></thead>
+        <tbody id="ts-body"></tbody>
+        <tfoot><tr><td>Week total</td><td colspan="4"></td><td></td><td id="ts-grand">0 hrs</td></tr></tfoot>
+      </table>
+    </div>
+
+    <div class="ts-actions">
+      <button class="btn" id="ts-submit">Submit week</button>
+      <span class="ts-status muted" id="ts-status">Not submitted yet.</span>
+    </div>
+  </section>
+
+  <!-- STEP 4: BUDGET (HOD ONLY) -->
+  <section class="block" id="budget">
+    <p class="kicker">Step 4</p>
+    <h2>Budget limits are set by the HOD only.</h2>
+    <p class="sub">Change a limit and the bars and analysis update straight away. Managers can see cost against budget, but cannot change the limits.</p>
+
+    <div id="budget-area"></div>
+  </section>
+
+  <section class="block contact">
+    <h2>Need cost visibility across your projects?</h2>
+    <p class="lead">Tell us how many projects you run and who needs to see what. We reply within two working days.</p>
+    <a class="btn" href="index.html#contact">Tell us about your company →</a>
+  </section>
+
+</main>
+
+<footer>
+  <p>My Studio. Systems built for small and mid-sized companies.</p>
+</footer>
+
+<script>
+  /* ----- Demo data (fictional sample data) ----- */
+  const RATE_DEFAULT = 95;
+  const PALETTE = ['#2A4FD6', '#F2B134', '#15803D', '#B42318', '#7C3AED', '#0EA5E9'];
+
+  const projects = [
+    { id: 'kiosk', name: 'Kiosk rollout', budget: 120000, team: [
+        { who: 'Aina Sofea', hrs: 240 }, { who: 'Daniel Tan', hrs: 210 }, { who: 'Ravi Kumar', hrs: 170 } ],
+      mine: true },
+    { id: 'clean', name: 'Leave records clean-up', budget: 85000, team: [
+        { who: 'Mei Ling', hrs: 260 }, { who: 'Nurul Hana', hrs: 150 } ], mine: false },
+    { id: 'audit', name: 'Site audit support', budget: 14000, team: [
+        { who: 'Aina Sofea', hrs: 90 }, { who: 'Syafiq Ali', hrs: 80 } ], mine: true },
+    { id: 'tax', name: 'Year-end reporting', budget: 40000, team: [
+        { who: 'Mei Ling', hrs: 120 } ], mine: false }
+  ];
+
+  const roles = {
+    staff:   { label: 'Employee',    screens: ['dashboard', 'timesheet'] },
+    manager: { label: 'Manager',     screens: ['dashboard', 'timesheet', 'projects', 'team', 'reports'] },
+    hod:     { label: 'HOD / Admin', screens: ['dashboard', 'timesheet', 'projects', 'team', 'reports', 'budget'] }
+  };
+  const screenNames = {
+    dashboard: 'Dashboard', timesheet: 'My timesheet', projects: 'All projects',
+    team: 'Team timesheets', reports: 'Reports', budget: 'Budget limits'
+  };
+
+  const fmt = n => 'RM ' + Math.round(n).toLocaleString('en-US');
+  const hoursOf = p => p.team.reduce((s, t) => s + t.hrs, 0);
+  const costOf = (p, rate) => hoursOf(p) * rate;
+  const pct = (c, b) => Math.min(100, (c / b) * 100);
+  const cls = (c, b) => c > b ? 'over' : c > b * 0.85 ? 'mid' : '';
+
+  let role = 'staff', screen = 'dashboard', rate = RATE_DEFAULT, filter = 'all', openProj = null, analysisMode = 'cost';
+
+  /* ----- Role screens ----- */
+  const screensEl = document.getElementById('screens');
+  const preview = document.getElementById('preview');
+
+  function renderScreens() {
+    const allowed = roles[role].screens;
+    if (!allowed.includes(screen)) screen = 'dashboard';
+    screensEl.innerHTML = '';
+    Object.keys(screenNames).forEach(key => {
+      const ok = allowed.includes(key);
+      const b = document.createElement('button');
+      b.className = 'screen-btn';
+      b.setAttribute('role', 'tab');
+      b.disabled = !ok;
+      b.setAttribute('aria-selected', key === screen);
+      b.innerHTML = `<span>${screenNames[key]}</span>${ok ? '' : '<span class="lock">Locked for ' + roles[role].label + '</span>'}`;
+      b.addEventListener('click', () => { screen = key; renderScreens(); });
+      screensEl.appendChild(b);
+    });
+    renderPreview();
+  }
+
+  function renderPreview() {
+    const isStaff = role === 'staff';
+    const mine = projects.filter(p => p.mine);
+    let html = '';
+
+    if (screen === 'dashboard') {
+      const list = isStaff ? mine : projects;
+      html = `<h3>Dashboard</h3><p class="muted">${isStaff ? 'Your assigned projects.' : 'All projects in your scope.'}</p>`;
+      html += list.length
+        ? list.map(p => {
+            const c = costOf(p, rate);
+            return `<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between"><strong>${p.name}</strong><span class="mono">${fmt(c)}</span></div><div class="bar"><div class="bar-fill ${cls(c, p.budget)}" style="width:${pct(c, p.budget)}%"></div></div></div>`;
+          }).join('')
+        : '<div class="note-box">No assigned projects yet. You are signed in, but nothing is assigned to you.</div>';
+    }
+
+    if (screen === 'timesheet') {
+      html = `<h3>My timesheet</h3><p class="muted">Enter hours in the table below, then submit the week.</p>
+        <p class="muted">Your projects: ${mine.map(p => p.name).join(', ') || 'none yet'}.</p>`;
+    }
+
+    if (screen === 'projects') {
+      html = `<h3>All projects</h3><p class="muted">Cost against budget for every project in your scope.</p>` +
+        projects.map(p => {
+          const over = costOf(p, rate) > p.budget;
+          return `<div class="row-line"><span>${p.name}</span><span class="pill ${over ? 'bad' : 'ok'}">${over ? 'Losing money' : 'On budget'}</span></div>`;
+        }).join('');
+    }
+
+    if (screen === 'team') {
+      html = `<h3>Team timesheets</h3><p class="muted">Hours logged by people in your team.</p>` +
+        projects.flatMap(p => p.team.map(t => `<div class="row-line"><span>${t.who}</span><span class="mono">${t.hrs} hrs · ${p.name}</span></div>`)).join('');
+    }
+
+    if (screen === 'reports') {
+      html = `<h3>Reports</h3><p class="muted">Cost by project at the current rate.</p>` +
+        projects.map(p => {
+          const c = costOf(p, rate);
+          return `<div class="row-line" style="align-items:center"><span>${p.name}</span><span class="mono">${fmt(c)}</span></div>
+                  <div class="bar" style="margin-bottom:10px"><div class="bar-fill ${cls(c, p.budget)}" style="width:${pct(c, p.budget)}%"></div></div>`;
+        }).join('');
+    }
+
+    if (screen === 'budget') {
+      html = `<h3>Budget limits</h3><p class="muted">Only the HOD and admin can change these.</p>
+        <p class="note-box">Open the Budget limits section below to edit a limit. The bars and analysis update straight away.</p>`;
+    }
+
+    preview.innerHTML = `<div class="rise">${html}</div>`;
+  }
+
+  document.querySelectorAll('#role-seg button').forEach(b => b.addEventListener('click', () => {
+    role = b.dataset.role;
+    document.querySelectorAll('#role-seg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    renderScreens();
+    renderBudget();
+    renderProjects();
+  }));
+
+  /* ----- Project board ----- */
+  const rateEl = document.getElementById('rate');
+  const rateOut = document.getElementById('rate-out');
+  const grid = document.getElementById('proj-grid');
+  const projSeg = document.querySelectorAll('#proj-seg button');
+
+  function renderProjects() {
+    const scope = role === 'staff' ? projects.filter(p => p.mine) : projects;
+    const rows = scope.filter(p => {
+      const over = costOf(p, rate) > p.budget;
+      if (filter === 'loss') return over;
+      if (filter === 'ok') return !over;
+      return true;
+    });
+    rateOut.textContent = 'RM ' + rate + ' / hr';
+
+    if (!scope.length) {
+      grid.innerHTML = '<p class="note-box proj-wide">No assigned projects yet.</p>';
+      return;
+    }
+    if (!rows.length) {
+      const msg = filter === 'loss'
+        ? `No project is over budget at RM ${rate} / hr. Raise the rate to see which projects tip over.`
+        : `Every project is over budget at RM ${rate} / hr. Lower the rate to see which ones stay on budget.`;
+      grid.innerHTML = `<p class="note-box proj-wide">${msg}</p>`;
+      return;
+    }
+
+    grid.innerHTML = rows.map(p => {
+      const c = costOf(p, rate);
+      const isOpen = openProj === p.id;
+      const over = c > p.budget;
+      return `<button class="proj card rise ${isOpen ? 'proj-wide' : ''}" aria-expanded="${isOpen}" data-id="${p.id}">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+          <h3>${p.name}</h3>
+          <span class="pill ${over ? 'bad' : 'ok'}">${over ? 'Losing money' : 'On budget'}</span>
+        </div>
+        <div class="bar"><div class="bar-fill ${cls(c, p.budget)}" style="width:${pct(c, p.budget)}%"></div></div>
+        <div class="figs"><span>Cost ${fmt(c)}</span><span>Budget ${fmt(p.budget)}</span></div>
+        ${isOpen ? `<div class="team-hours">${p.team.map(t => `<div><span>${t.who}</span><span class="mono">${t.hrs} hrs · ${fmt(t.hrs * rate)}</span></div>`).join('')}</div>` : ''}
+      </button>`;
+    }).join('');
+
+    grid.querySelectorAll('.proj').forEach(btn => btn.addEventListener('click', () => {
+      openProj = openProj === btn.dataset.id ? null : btn.dataset.id;
+      renderProjects();
+    }));
+  }
+
+  rateEl.addEventListener('input', () => {
+    rate = Number(rateEl.value);
+    renderProjects();
+    renderScreens();
+    refreshBudget();
+  });
+  projSeg.forEach(b => b.addEventListener('click', () => {
+    filter = b.dataset.f;
+    projSeg.forEach(x => x.setAttribute('aria-pressed', x === b));
+    renderProjects();
+  }));
+
+  /* ----- Timesheet ----- */
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  const tsBody = document.getElementById('ts-body');
+  const tsGrand = document.getElementById('ts-grand');
+  const tsStatus = document.getElementById('ts-status');
+  const tsSubmit = document.getElementById('ts-submit');
+  const myRows = projects.filter(p => p.mine);
+  const seed = { kiosk: [8, 8, 8, 6, 8], audit: [0, 0, 4, 4, 0] };
+
+  function renderTs() {
+    tsBody.innerHTML = myRows.map(p => `
+      <tr>
+        <td>${p.name}</td>
+        ${days.map((d, i) => `<td><input type="number" min="0" max="12" step="0.5" value="${(seed[p.id] || [])[i] || 0}" data-proj="${p.id}" aria-label="${p.name}, ${d} hours"></td>`).join('')}
+        <td class="mono" data-row="${p.id}"></td>
+      </tr>`).join('');
+    tsBody.querySelectorAll('input').forEach(i => i.addEventListener('input', updateTs));
+    updateTs();
+  }
+
+  function updateTs() {
+    let grand = 0;
+    myRows.forEach(p => {
+      let row = 0;
+      tsBody.querySelectorAll(`input[data-proj="${p.id}"]`).forEach(i => row += Number(i.value) || 0);
+      grand += row;
+      tsBody.querySelector(`td[data-row="${p.id}"]`).textContent = row + ' hrs';
+    });
+    tsGrand.textContent = grand + ' hrs';
+    tsStatus.textContent = 'Not submitted yet.';
+    tsSubmit.disabled = false;
+    tsSubmit.textContent = 'Submit week';
+  }
+
+  tsSubmit.addEventListener('click', () => {
+    tsSubmit.disabled = true;
+    tsSubmit.textContent = 'Submitted';
+    tsStatus.textContent = 'Sent to your line manager for approval.';
+  });
+
+  /* ----- Budget limits (HOD only) ----- */
+  const budgetArea = document.getElementById('budget-area');
+
+  function renderBudget() {
+    if (role !== 'hod') {
+      budgetArea.innerHTML = `<div class="card" style="max-width:640px;padding:22px">
+        <h3 style="font-size:19px;margin-bottom:6px">Locked for this role</h3>
+        <p class="muted">Only the HOD and admin can see and change budget limits. Switch the role above to HOD / Admin to view this screen.</p>
+      </div>`;
+      return;
+    }
+
+    budgetArea.innerHTML = `
+      <div class="budget-totals" id="budget-totals"></div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="limit-table">
+          <thead><tr><th>Project</th><th>Budget limit (RM)</th><th>Cost now</th><th>Used of budget</th><th>Status</th></tr></thead>
+          <tbody>${projects.map(p => `
+            <tr>
+              <td>${p.name}</td>
+              <td><input type="number" step="1000" value="${p.budget}" data-id="${p.id}" aria-label="${p.name} budget limit"></td>
+              <td class="mono" data-cost="${p.id}"></td>
+              <td><div class="bar"><div class="bar-fill" data-bar="${p.id}"></div></div></td>
+              <td><span class="pill" data-used="${p.id}"></span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card analysis" id="analysis"></div>`;
+
+    budgetArea.querySelectorAll('input[data-id]').forEach(inp => inp.addEventListener('input', () => {
+      const p = projects.find(x => x.id === inp.dataset.id);
+      p.budget = Math.max(1000, Number(inp.value) || 1000);
+      renderProjects();
+      refreshBudget();
+    }));
+
+    refreshBudget();
+  }
+
+  function refreshBudget() {
+    if (role !== 'hod') return;
+    let totalCost = 0, totalBudget = 0;
+
+    projects.forEach(p => {
+      const c = costOf(p, rate);
+      totalCost += c; totalBudget += p.budget;
+      const over = c > p.budget;
+      const costEl = budgetArea.querySelector(`[data-cost="${p.id}"]`);
+      const barEl = budgetArea.querySelector(`[data-bar="${p.id}"]`);
+      const pillEl = budgetArea.querySelector(`[data-used="${p.id}"]`);
+      if (costEl) costEl.textContent = fmt(c);
+      if (barEl) { barEl.style.width = pct(c, p.budget) + '%'; barEl.className = 'bar-fill ' + cls(c, p.budget); }
+      if (pillEl) {
+        pillEl.textContent = Math.round((c / p.budget) * 100) + '% · ' + (over ? 'over' : 'on track');
+        pillEl.className = 'pill ' + (over ? 'bad' : 'ok');
+      }
+    });
+
+    const left = totalBudget - totalCost;
+    document.getElementById('budget-totals').innerHTML = `
+      <div class="card"><div class="big">${fmt(totalBudget)}</div><div class="lbl">Total budget across projects</div></div>
+      <div class="card"><div class="big">${fmt(totalCost)}</div><div class="lbl">Cost to date at RM ${rate} / hr</div></div>
+      <div class="card"><div class="big" style="color:${left < 0 ? 'var(--red)' : 'var(--ink)'}">${left < 0 ? '-' + fmt(-left) : fmt(left)}</div><div class="lbl">${left < 0 ? 'Over budget overall' : 'Budget left overall'}</div></div>`;
+
+    renderAnalysis();
+  }
+
+  function renderAnalysis() {
+    const el = document.getElementById('analysis');
+    if (!el) return;
+
+    const head = `
+      <div class="analysis-head">
+        <div>
+          <h3>Analysis</h3>
+          <p>${analysisMode === 'cost' ? 'Cost against budget. The black line marks the budget limit.' : 'Hours by person for each project, as a share of the total.'}</p>
+        </div>
+        <div class="seg" role="group" aria-label="Analysis view">
+          <button data-mode="cost" aria-pressed="${analysisMode === 'cost'}">Cost vs budget</button>
+          <button data-mode="hours" aria-pressed="${analysisMode === 'hours'}">Hours by person</button>
+        </div>
+      </div>`;
+
+    let body = '';
+    if (analysisMode === 'cost') {
+      const max = Math.max(...projects.map(p => Math.max(costOf(p, rate), p.budget)));
+      body = projects.map(p => {
+        const c = costOf(p, rate);
+        const fillW = (c / max) * 100;
+        const markL = (p.budget / max) * 100;
+        return `<div class="chart-row">
+          <span class="name">${p.name}</span>
+          <div class="chart-track" aria-label="${p.name} cost ${Math.round(c / p.budget * 100)}% of budget">
+            <div class="chart-fill ${c > p.budget ? 'over' : ''}" style="width:${fillW}%"></div>
+            <div class="chart-mark" style="left:${markL}%"></div>
+          </div>
+          <span class="chart-val">${fmt(c)} / ${fmt(p.budget)}</span>
+        </div>`;
+      }).join('');
+    } else {
+      const names = [...new Set(projects.flatMap(p => p.team.map(t => t.who)))];
+      const colorOf = n => PALETTE[names.indexOf(n) % PALETTE.length];
+      body = projects.map(p => {
+        const total = hoursOf(p);
+        return `<div class="chart-row">
+          <span class="name">${p.name}</span>
+          <div class="stack">${p.team.map(t => `<span title="${t.who}: ${t.hrs} hrs" style="width:${(t.hrs / total) * 100}%;background:${colorOf(t.who)}"></span>`).join('')}</div>
+          <span class="chart-val">${total} hrs</span>
+        </div>`;
+      }).join('');
+      body += `<div class="legend">${names.map(n => `<span><i style="background:${colorOf(n)}"></i>${n}</span>`).join('')}</div>`;
+    }
+
+    const over = projects.filter(p => costOf(p, rate) > p.budget);
+    const foot = over.length
+      ? `<p class="analysis-foot">${over.length} of ${projects.length} projects are over budget at RM ${rate} / hr: ${over.map(p => p.name).join(', ')}.</p>`
+      : `<p class="analysis-foot">All ${projects.length} projects are within budget at RM ${rate} / hr.</p>`;
+
+    el.innerHTML = head + body + foot;
+
+    el.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
+      analysisMode = b.dataset.mode;
+      renderAnalysis();
+    }));
+  }
+
+  /* ----- Init ----- */
+  renderScreens();
+  renderProjects();
+  renderTs();
+  renderBudget();
+</script>
+</body>
+</html>
