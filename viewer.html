@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product prototypes · My Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;900&family=Bricolage+Grotesque:wght@700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one slim bar over a full-height stage, so a prototype always feels like the app itself. */
+:root {
+  --paper: #EDF0F3;
+  --ink: #17202B;
+  --ink-soft: #4A5566;
+  --blue: #2A4FD6;
+  --blue-wash: #DDE5FB;
+  --orange: #EA580C;
+  --rule: #C5CDD7;
+  --bar-h: 64px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Schibsted Grotesk", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+/* Smooth hand-off between the home screen and this page */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .35s; }
+
+/* ---------- Bar ---------- */
+.bar {
+  flex: none; min-height: var(--bar-h);
+  display: flex; align-items: center; gap: 18px;
+  padding: 10px clamp(16px, 3vw, 32px);
+  background: rgba(255,255,255,.78);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border-bottom: 1px solid var(--rule);
+  position: relative; z-index: 5;
+}
+.back {
+  display: inline-flex; align-items: center; gap: 10px;
+  text-decoration: none; color: var(--ink); font-weight: 700; font-size: 15px;
+  padding: 8px 14px 8px 10px; border: 1px solid var(--rule); border-radius: 999px; background: #fff;
+  transition: transform .2s, box-shadow .2s, border-color .2s; flex: none;
+}
+.back:hover { transform: translateX(-2px); box-shadow: 0 6px 18px rgba(23,32,43,.12); border-color: var(--ink); }
+.back svg { width: 18px; height: 18px; }
+.back .mark { width: 22px; height: 22px; border-radius: 7px; display: block; }
+.now { min-width: 0; flex: none; }
+.now h1 { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.02em; line-height: 1.1; white-space: nowrap; }
+.now p { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 30ch; }
+
+.tabs { display: flex; gap: 6px; margin-left: auto; overflow-x: auto; padding: 4px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex: none; font: inherit; font-size: 14px; font-weight: 700; color: var(--ink);
+  border: 1px solid transparent; background: transparent; border-radius: 999px; padding: 8px 14px; cursor: pointer;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.tab:hover { background: var(--blue-wash); }
+.tab[aria-selected="true"] { background: var(--ink); color: #fff; }
+
+.newtab {
+  flex: none; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--blue);
+  font-weight: 700; font-size: 14px; padding: 8px 4px;
+}
+.newtab svg { width: 16px; height: 16px; }
+.newtab:hover { text-decoration: underline; }
+
+/* ---------- Stage ---------- */
+.stage { flex: 1; min-height: 0; position: relative; background: #fff; }
+.stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; opacity: 0; transition: opacity .45s ease; }
+.stage.ready iframe { opacity: 1; }
+.loading {
+  position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 14px; text-align: center;
+  background: linear-gradient(135deg, #E4EAF6, #F2F0F8 50%, #E9F3F0); transition: opacity .4s ease; padding: 24px;
+}
+.stage.ready .loading { opacity: 0; pointer-events: none; }
+.loading .bar-track { width: 180px; height: 6px; border-radius: 999px; background: rgba(23,32,43,.12); overflow: hidden; }
+.loading .bar-fill { height: 100%; width: 40%; border-radius: 999px; background: var(--blue); animation: slide 1.1s ease-in-out infinite; }
+@keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(260%); } }
+.loading p { font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--ink-soft); }
+
+@media (max-width: 860px) {
+  .bar { flex-wrap: wrap; row-gap: 6px; }
+  .now p { display: none; }
+  .tabs { order: 3; width: 100%; margin-left: 0; padding: 0 0 4px; }
+  .newtab { margin-left: auto; }
+  .newtab span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .loading .bar-fill { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <a class="back" href="index.html#products" id="back" aria-label="Back to the My Studio home screen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="vt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B7FF0"/><stop offset="1" stop-color="#2A4FD6"/></linearGradient></defs><rect x="4" y="4" width="56" height="56" rx="16" fill="url(#vt)"/><circle cx="32" cy="25" r="11" fill="#F2D24B"/><rect x="27" y="33" width="10" height="6" rx="2" fill="#F2D24B"/><rect x="24" y="44" width="16" height="4.5" rx="2.25" fill="#fff"/><rect x="27" y="50" width="10" height="4" rx="2" fill="#fff" fill-opacity=".7"/></svg>
+    All products
+  </a>
+  <div class="now">
+    <h1 id="now-name">Leave Management System</h1>
+    <p id="now-note">Prototype</p>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Switch prototype" id="tabs"></nav>
+  <a class="newtab" id="newtab" href="prototypes/leave.html" target="_blank" rel="noopener">
+    <span>Open full screen</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+  </a>
+</header>
+
+<main class="stage" id="stage">
+  <div class="loading" id="loading" role="status">
+    <div class="bar-track"><div class="bar-fill"></div></div>
+    <p id="loading-text">Opening prototype</p>
+  </div>
+  <iframe id="frame" title="Product prototype"
+    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"></iframe>
+</main>
+
+<noscript>
+  <p style="padding:24px">Prototypes need JavaScript. Open them directly:
+    <a href="prototypes/leave.html">Leave</a>, <a href="prototypes/timecost360.html">Time Cost 360</a>,
+    <a href="prototypes/timesheet.html">Timesheet</a>, <a href="prototypes/signage.html">Digital Signage</a>,
+    <a href="prototypes/consultation.html">Consultation booking</a>.</p>
+</noscript>
+
+<script>
+(function () {
+  var PRODUCTS = [
+    { slug: 'leave',        tab: 'Leave',        name: 'Leave Management System',            note: 'Prototype · EmployeeHub',      file: 'prototypes/leave.html' },
+    { slug: 'timecost360',  tab: 'Time Cost 360', name: 'Time Cost 360',                      note: 'Prototype · Project cost',     file: 'prototypes/timecost360.html' },
+    { slug: 'timesheet',    tab: 'Timesheet',    name: 'Timesheet',                          note: 'Prototype · Weekly hours',     file: 'prototypes/timesheet.html' },
+    { slug: 'signage',      tab: 'Digital Signage', name: 'Digital Signage',                 note: 'Prototype · Screens',          file: 'prototypes/signage.html' },
+    { slug: 'consultation', tab: 'Consultation', name: 'Consultation booking & registration', note: 'Prototype · Clinic',           file: 'prototypes/consultation.html' }
+  ];
+
+  var stage = document.getElementById('stage');
+  var frame = document.getElementById('frame');
+  var tabs = document.getElementById('tabs');
+  var nowName = document.getElementById('now-name');
+  var nowNote = document.getElementById('now-note');
+  var newtab = document.getElementById('newtab');
+  var loadingText = document.getElementById('loading-text');
+  var current = null;
+
+  function find(slug) { for (var i = 0; i < PRODUCTS.length; i++) if (PRODUCTS[i].slug === slug) return PRODUCTS[i]; return null; }
+
+  PRODUCTS.forEach(function (p) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'tab'; b.id = 'tab-' + p.slug; b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', 'false'); b.textContent = p.tab; b.dataset.slug = p.slug;
+    b.addEventListener('click', function () { show(p.slug, true); });
+    b.addEventListener('keydown', function (e) {
+      var i = PRODUCTS.indexOf(p), n = null;
+      if (e.key === 'ArrowRight') n = PRODUCTS[(i + 1) % PRODUCTS.length];
+      if (e.key === 'ArrowLeft') n = PRODUCTS[(i + PRODUCTS.length - 1) % PRODUCTS.length];
+      if (n) { e.preventDefault(); show(n.slug, true); document.getElementById('tab-' + n.slug).focus(); }
+    });
+    tabs.appendChild(b);
+  });
+
+  function show(slug, push) {
+    var p = find(slug) || PRODUCTS[0];
+    if (current === p.slug) return;
+    current = p.slug;
+    stage.classList.remove('ready');
+    loadingText.textContent = 'Opening ' + p.name;
+    frame.src = p.file;
+    nowName.textContent = p.name;
+    nowNote.textContent = p.note;
+    newtab.href = p.file;
+    document.title = p.name + ' · My Studio';
+    PRODUCTS.forEach(function (q) {
+      var t = document.getElementById('tab-' + q.slug);
+      t.setAttribute('aria-selected', q.slug === p.slug ? 'true' : 'false');
+      t.tabIndex = q.slug === p.slug ? 0 : -1;
+      if (q.slug === p.slug && push) t.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    });
+    try { history.replaceState(null, '', '?p=' + p.slug); } catch (e) {}
+  }
+
+  // If a prototype is slow (it loads fonts or libraries), reveal it after a short wait rather than leave the loader up.
+  frame.addEventListener('load', function () { stage.classList.add('ready'); });
+  setTimeout(function () { if (current) stage.classList.add('ready'); }, 6000);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') window.location.href = 'index.html#products';
+  });
+
+  var q = new URLSearchParams(location.search).get('p');
+  show(q, false);
+})();
+</script>
+</body>
+</html>

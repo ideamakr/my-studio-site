@@ -411,6 +411,61 @@ footer { background: rgba(15, 22, 32, .75); backdrop-filter: blur(14px); -webkit
 .wordmark span em { font-style: normal; color: #EA580C; }
 
 </style>
+
+<style>
+  /* Product launcher */
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .35s; }
+  .launch-stats { display: flex; flex-wrap: wrap; gap: 10px 28px; margin: 4px 0 26px; padding: 14px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .launch-stats div { display: flex; align-items: baseline; gap: 10px; font-size: 15px; color: var(--ink-soft); }
+  .launch-stats b { font-size: 28px; font-weight: 900; letter-spacing: -0.03em; color: var(--ink); }
+  .launcher { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(16px, 2vw, 26px); }
+  .tile {
+    grid-column: span var(--span, 2); position: relative; display: flex; flex-direction: column; overflow: hidden;
+    background: rgba(255,255,255,.62); border: 1px solid rgba(255,255,255,.85); border-radius: 20px;
+    box-shadow: 0 10px 36px rgba(23,32,43,.10); transition: transform .25s cubic-bezier(.2,.7,.2,1), box-shadow .25s;
+  }
+  .tile:hover, .tile:focus-within { transform: translateY(-5px); box-shadow: 0 22px 50px rgba(23,32,43,.18); }
+  .tile .thumb { height: 150px; overflow: hidden; border-bottom: 1px solid rgba(23,32,43,.08); }
+  .tile .thumb svg { display: block; width: 100%; height: 100%; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+  .tile:hover .thumb svg { transform: scale(1.05); }
+  .tile-body { display: flex; flex-direction: column; gap: 10px; padding: 22px 24px 24px; flex: 1; }
+  .tile-meta { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .tile .k { font-size: 13px; color: var(--ink-soft); }
+  .chip { font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .chip.ok { background: var(--green-wash); color: var(--green); }
+  .chip.wip { background: #FBEBCF; color: var(--amber); }
+  .tile h3 { font-size: clamp(22px, 2.2vw, 30px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.08; }
+  .tile p { color: var(--ink-soft); font-size: 16px; max-width: 44ch; }
+  .tile-foot { margin-top: auto; padding-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .tile .open { font-weight: 700; color: var(--blue); text-decoration: none; display: inline-flex; gap: 8px; align-items: center; }
+  .tile .open::after { content: ""; position: absolute; inset: 0; border-radius: 20px; } /* whole tile is the click target */
+  .tile .open .arrow { transition: transform .25s; }
+  .tile:hover .open .arrow { transform: translateX(5px); }
+  .tile .more { position: relative; z-index: 2; font-size: 14px; font-weight: 600; color: var(--ink-soft); }
+  .tile .more:hover { color: var(--blue); }
+  .tile.dark { background: rgba(23,32,43,.86); border-color: rgba(255,255,255,.16); color: #fff; }
+  .tile.dark p, .tile.dark .k { color: #B9C2CF; }
+  .tile.dark .open { color: var(--yellow); }
+  .tile.dark .more { color: #B9C2CF; }
+  .tile.dark .more:hover { color: #fff; }
+  .tile.dark .chip.ok { background: rgba(21,128,61,.28); color: #9BE3B3; }
+  .tile.dark .thumb { border-bottom-color: rgba(255,255,255,.1); }
+  .tile.wide { flex-direction: row; align-items: stretch; border-style: dashed; border-color: var(--rule); background: rgba(255,255,255,.4); box-shadow: none; }
+  .tile.wide .thumb { width: 34%; height: auto; min-height: 150px; border-bottom: 0; border-right: 1px dashed var(--rule); }
+  .tile.wide .thumb svg { object-fit: cover; }
+  @media (max-width: 960px) {
+    .tile { grid-column: span 3; }
+    .tile.wide { grid-column: span 6; }
+  }
+  @media (max-width: 640px) {
+    .launcher { grid-template-columns: 1fr; }
+    .tile, .tile.wide { grid-column: auto; }
+    .tile.wide { flex-direction: column; }
+    .tile.wide .thumb { width: 100%; min-height: 0; height: 150px; border-right: 0; border-bottom: 1px dashed var(--rule); }
+  }
+  @media (prefers-reduced-motion: reduce) { .tile, .tile .thumb svg, .tile .open .arrow { transition: none !important; } }
+</style>
 </head>
 <body>
 
@@ -418,8 +473,8 @@ footer { background: rgba(15, 22, 32, .75); backdrop-filter: blur(14px); -webkit
   <a class="wordmark" href="index.html"><svg width="28" height="28" viewBox="0 0 64 64" role="img" aria-label="My Studio logo" aria-hidden="false"><defs><linearGradient id="logo-tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B7FF0"/><stop offset="1" stop-color="#2A4FD6"/></linearGradient></defs><rect x="4" y="4" width="56" height="56" rx="16" fill="url(#logo-tile)"/><circle cx="32" cy="26" r="16" fill="#FFFFFF" fill-opacity="0.12"/><circle cx="32" cy="25" r="11" fill="#F2D24B"/><rect x="27" y="33" width="10" height="6" rx="2" fill="#F2D24B"/><path d="M27.5 27.5 L30 21.5 L32 25.5 L34 21.5 L36.5 27.5" fill="none" stroke="#2A4FD6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><rect x="24" y="44" width="16" height="4.5" rx="2.25" fill="#FFFFFF"/><rect x="27" y="50" width="10" height="4" rx="2" fill="#FFFFFF" fill-opacity="0.7"/><path d="M48 10 L49.3 13.7 L53 15 L49.3 16.3 L48 20 L46.7 16.3 L43 15 L46.7 13.7 Z" fill="#F2D24B"/></svg><span>My<em>Studio</em></span></a>
   <nav>
     <a href="index.html" aria-current="page">Home</a>
-    <a href="lms.html">Leave system</a>
-    <a href="timecost360.html">Time Cost 360</a>
+    <a href="#products">Products</a>
+    <a href="#services-overview">What we do</a>
     <a href="#build">Build yours</a>
     <a href="#contact">Contact</a>
   </nav>
@@ -432,6 +487,139 @@ footer { background: rgba(15, 22, 32, .75); backdrop-filter: blur(14px); -webkit
     <h1>Internal systems that <span class="strike">take the paperwork</span> off your team.</h1>
     <p class="lede">We build the tools a company runs on: leave, approvals, timesheets and project cost. Every system is shaped around how your people already work, including how many approval levels you need.</p>
   </div>
+
+  <section class="block" id="products">
+    <p class="kicker">Our products</p>
+    <h2>Open any product and try it.</h2>
+    <p class="sub">Each product opens as a working prototype with sample data. Click around: nothing you do is saved to a real system.</p>
+
+    <div class="launch-stats" aria-label="Product status">
+      <div><b>5</b><span>prototypes you can open</span></div>
+      <div><b>1</b><span>in design</span></div>
+      <div><b>3</b><span>ways we help: connect, migrate, build</span></div>
+    </div>
+
+    <div class="launcher">
+      <article class="tile " style="--span:3" data-prefetch="leave">
+        <div class="thumb"><svg viewBox="0 0 320 150" role="img" aria-label="Month calendar with approved leave days highlighted">
+  <rect x="0" y="0" width="320" height="150" fill="#DDE5FB"/>
+  <g font-family="JetBrains Mono, monospace" font-size="9" fill="#4A5566">
+    <text x="26" y="26">MON</text><text x="70" y="26">TUE</text><text x="114" y="26">WED</text><text x="158" y="26">THU</text><text x="202" y="26">FRI</text>
+  </g>
+  <g fill="#fff">
+    <rect x="22" y="34" width="38" height="28" rx="8"/><rect x="66" y="34" width="38" height="28" rx="8"/><rect x="110" y="34" width="38" height="28" rx="8"/><rect x="154" y="34" width="38" height="28" rx="8"/><rect x="198" y="34" width="38" height="28" rx="8"/>
+    <rect x="22" y="68" width="38" height="28" rx="8"/><rect x="66" y="68" width="38" height="28" rx="8"/><rect x="198" y="68" width="38" height="28" rx="8"/>
+    <rect x="22" y="102" width="38" height="28" rx="8"/><rect x="66" y="102" width="38" height="28" rx="8"/><rect x="110" y="102" width="38" height="28" rx="8"/><rect x="154" y="102" width="38" height="28" rx="8"/>
+  </g>
+  <rect x="110" y="68" width="82" height="28" rx="8" fill="#2A4FD6"/>
+  <rect x="198" y="102" width="38" height="28" rx="8" fill="#F2D24B"/>
+  <rect x="252" y="34" width="52" height="96" rx="12" fill="#17202B"/>
+  <rect x="261" y="46" width="34" height="6" rx="3" fill="#fff" fill-opacity=".85"/>
+  <rect x="261" y="60" width="26" height="6" rx="3" fill="#fff" fill-opacity=".4"/>
+  <circle cx="270" cy="108" r="9" fill="#15803D"/><path d="M265.5 108l3 3 5.5-6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div>
+        <div class="tile-body">
+          <div class="tile-meta"><span class="k">Product 01 · EmployeeHub</span><span class="chip ok">Prototype ready</span></div>
+          <h3>Leave Management System</h3>
+          <p>Staff request leave, managers approve it through up to three levels, and everyone can see who is away and when.</p>
+          <div class="tile-foot">
+            <a class="open" href="viewer.html?p=leave">Open prototype<span class="arrow" aria-hidden="true">→</span></a><a class="more" href="lms.html">Product details</a>
+          </div>
+        </div>
+      </article>
+      <article class="tile dark" style="--span:3" data-prefetch="timecost360">
+        <div class="thumb"><svg viewBox="0 0 320 150" role="img" aria-label="Project cost bars against budget">
+  <rect width="320" height="150" fill="#17202B"/>
+  <g font-family="JetBrains Mono, monospace" font-size="9" fill="#B9C2CF"><text x="22" y="34">Kiosk rollout</text><text x="22" y="74">Site audit</text><text x="22" y="114">Year-end report</text></g>
+  <g><rect x="22" y="40" width="276" height="12" rx="6" fill="#fff" fill-opacity=".14"/><rect x="22" y="40" width="198" height="12" rx="6" fill="#5B7FF0"/>
+  <rect x="22" y="80" width="276" height="12" rx="6" fill="#fff" fill-opacity=".14"/><rect x="22" y="80" width="276" height="12" rx="6" fill="#F47A6E"/>
+  <rect x="22" y="120" width="276" height="12" rx="6" fill="#fff" fill-opacity=".14"/><rect x="22" y="120" width="132" height="12" rx="6" fill="#F7C25C"/></g>
+  <rect x="297" y="30" width="2" height="108" fill="#F2D24B"/>
+</svg></div>
+        <div class="tile-body">
+          <div class="tile-meta"><span class="k">Product 02 · Project cost</span><span class="chip ok">Prototype ready</span></div>
+          <h3>Time Cost 360</h3>
+          <p>Cost against budget for each project, built from the hours people log, with screens that change by role.</p>
+          <div class="tile-foot">
+            <a class="open" href="viewer.html?p=timecost360">Open prototype<span class="arrow" aria-hidden="true">→</span></a><a class="more" href="timecost360.html">Product details</a>
+          </div>
+        </div>
+      </article>
+      <article class="tile " style="--span:2" data-prefetch="timesheet">
+        <div class="thumb"><svg viewBox="0 0 320 150" role="img" aria-label="Weekly timesheet grid with hours per day">
+  <rect width="320" height="150" fill="#EDF1FF"/>
+  <g font-family="JetBrains Mono, monospace" font-size="9" fill="#4A5566"><text x="104" y="24">MON</text><text x="144" y="24">TUE</text><text x="184" y="24">WED</text><text x="224" y="24">THU</text><text x="264" y="24">FRI</text></g>
+  <g fill="#fff"><rect x="18" y="34" width="284" height="26" rx="8"/><rect x="18" y="66" width="284" height="26" rx="8"/><rect x="18" y="98" width="284" height="26" rx="8"/></g>
+  <g fill="#17202B" opacity=".75"><rect x="28" y="43" width="52" height="8" rx="4"/><rect x="28" y="75" width="40" height="8" rx="4"/><rect x="28" y="107" width="60" height="8" rx="4"/></g>
+  <g fill="#315CF5"><rect x="100" y="39" width="30" height="16" rx="6"/><rect x="140" y="39" width="30" height="16" rx="6"/><rect x="180" y="39" width="30" height="16" rx="6"/><rect x="220" y="39" width="30" height="16" rx="6"/><rect x="100" y="71" width="30" height="16" rx="6" opacity=".45"/><rect x="260" y="71" width="30" height="16" rx="6"/><rect x="180" y="103" width="30" height="16" rx="6" opacity=".45"/><rect x="260" y="103" width="30" height="16" rx="6" opacity=".45"/></g>
+  <rect x="240" y="130" width="62" height="14" rx="7" fill="#119B75"/>
+</svg></div>
+        <div class="tile-body">
+          <div class="tile-meta"><span class="k">Product 03 · Weekly hours</span><span class="chip ok">Prototype ready</span></div>
+          <h3>Timesheet</h3>
+          <p>Staff log hours day by day against their projects and see the week add up.</p>
+          <div class="tile-foot">
+            <a class="open" href="viewer.html?p=timesheet">Open prototype<span class="arrow" aria-hidden="true">→</span></a>
+          </div>
+        </div>
+      </article>
+      <article class="tile " style="--span:2" data-prefetch="signage">
+        <div class="thumb"><svg viewBox="0 0 320 150" role="img" aria-label="Screen with a playlist schedule">
+  <rect width="320" height="150" fill="#E9F3F0"/>
+  <rect x="22" y="18" width="150" height="92" rx="10" fill="#17202B"/>
+  <rect x="32" y="28" width="130" height="50" rx="6" fill="#2A4FD6"/>
+  <circle cx="60" cy="53" r="13" fill="#F2D24B"/><rect x="82" y="44" width="70" height="8" rx="4" fill="#fff"/><rect x="82" y="58" width="48" height="6" rx="3" fill="#fff" fill-opacity=".6"/>
+  <rect x="32" y="86" width="130" height="14" rx="4" fill="#fff" fill-opacity=".14"/>
+  <rect x="82" y="112" width="30" height="8" rx="4" fill="#17202B" fill-opacity=".35"/><rect x="62" y="120" width="70" height="5" rx="2.5" fill="#17202B" fill-opacity=".35"/>
+  <g font-family="JetBrains Mono, monospace" font-size="8" fill="#4A5566"><text x="190" y="28">09:00</text><text x="190" y="62">12:00</text><text x="190" y="96">18:00</text></g>
+  <rect x="226" y="18" width="78" height="16" rx="6" fill="#2A4FD6"/><rect x="226" y="40" width="54" height="16" rx="6" fill="#EA580C"/><rect x="226" y="52" width="0" height="0"/>
+  <rect x="226" y="52" width="70" height="16" rx="6" fill="#15803D"/><rect x="226" y="74" width="40" height="16" rx="6" fill="#F2D24B"/><rect x="226" y="96" width="78" height="16" rx="6" fill="#17202B"/>
+</svg></div>
+        <div class="tile-body">
+          <div class="tile-meta"><span class="k">Product 04 · Screens</span><span class="chip ok">Prototype ready</span></div>
+          <h3>Digital Signage</h3>
+          <p>Run screens in shops, offices and waiting areas, with playlists and schedules managed from one place.</p>
+          <div class="tile-foot">
+            <a class="open" href="viewer.html?p=signage">Open prototype<span class="arrow" aria-hidden="true">→</span></a>
+          </div>
+        </div>
+      </article>
+      <article class="tile " style="--span:2" data-prefetch="consultation">
+        <div class="thumb"><svg viewBox="0 0 320 150" role="img" aria-label="Patient queue with status labels">
+  <rect width="320" height="150" fill="#FDF1E6"/>
+  <g fill="#fff"><rect x="18" y="16" width="284" height="38" rx="10"/><rect x="18" y="60" width="284" height="38" rx="10"/><rect x="18" y="104" width="284" height="30" rx="10"/></g>
+  <g><circle cx="42" cy="35" r="12" fill="#2A4FD6"/><circle cx="42" cy="79" r="12" fill="#EA580C"/><circle cx="42" cy="119" r="10" fill="#15803D"/></g>
+  <g fill="#17202B" opacity=".8"><rect x="64" y="28" width="86" height="8" rx="4"/><rect x="64" y="72" width="70" height="8" rx="4"/><rect x="64" y="113" width="96" height="8" rx="4"/></g>
+  <g fill="#17202B" opacity=".25"><rect x="64" y="40" width="54" height="5" rx="2.5"/><rect x="64" y="84" width="44" height="5" rx="2.5"/></g>
+  <rect x="226" y="26" width="64" height="18" rx="9" fill="#DCF2E3"/><rect x="226" y="70" width="64" height="18" rx="9" fill="#F2D24B"/><rect x="226" y="110" width="64" height="16" rx="8" fill="#DDE5FB"/>
+</svg></div>
+        <div class="tile-body">
+          <div class="tile-meta"><span class="k">Product 05 · Clinics</span><span class="chip ok">Prototype ready</span></div>
+          <h3>Consultation booking and registration</h3>
+          <p>Bookings, patient registration and the consultation queue for clinics with one or more branches.</p>
+          <div class="tile-foot">
+            <a class="open" href="viewer.html?p=consultation">Open prototype<span class="arrow" aria-hidden="true">→</span></a>
+          </div>
+        </div>
+      </article>
+      <article class="tile soon wide" style="--span:6" data-prefetch="claims">
+        <div class="thumb"><svg viewBox="0 0 320 150" role="img" aria-label="Receipt outline">
+  <rect width="320" height="150" fill="#F4F6F9"/>
+  <path d="M120 20h80v100l-10-7-10 7-10-7-10 7-10-7-10 7-10-7-10 7z" fill="#fff" stroke="#C5CDD7" stroke-width="2" stroke-dasharray="5 5"/>
+  <g fill="#C5CDD7"><rect x="136" y="38" width="48" height="7" rx="3.5"/><rect x="136" y="54" width="36" height="7" rx="3.5"/><rect x="136" y="70" width="48" height="7" rx="3.5"/></g>
+  <rect x="136" y="88" width="48" height="12" rx="6" fill="#F2D24B"/>
+</svg></div>
+        <div class="tile-body">
+          <div class="tile-meta"><span class="k">Product 06 · Claims</span><span class="chip wip">In design</span></div>
+          <h3>Claim submission</h3>
+          <p>Staff submit claims with receipts, and managers approve them through the same steps as leave. There is no working prototype yet, so this opens a short preview.</p>
+          <div class="tile-foot">
+            <a class="open" href="teaser/expenses.html">See the preview<span class="arrow" aria-hidden="true">→</span></a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
 
   <!-- INTERACTIVE: what we can do -->
   <section class="block" id="services-overview">
@@ -456,69 +644,6 @@ footer { background: rgba(15, 22, 32, .75); backdrop-filter: blur(14px); -webkit
       </div>
 
       <div class="path-panel card" id="path-panel" role="tabpanel" aria-live="polite"></div>
-    </div>
-  </section>
-
-  <section class="block" id="products">
-    <p class="kicker">Our systems</p>
-    <h2>Two systems we have built. Open either to see it working.</h2>
-    <p class="sub">Each page has live examples: balances, calendars, approvals, and dashboards you can move around.</p>
-
-    <div class="doors">
-      <a class="door" href="lms.html">
-        <span class="k">Product 01 · Employee Hub</span>
-        <h3>Leave management system</h3>
-        <p>Leave balances as cards, who is away today, a team calendar, and approvals with one, two or three levels.</p>
-        <div class="stats">
-          <div><b>~100</b>staff</div>
-          <div><b>1–3</b>approval levels</div>
-          <div><b>4</b>leave types</div>
-        </div>
-        <span class="go">Open the leave system →</span>
-      </a>
-
-      <a class="door tc" href="timecost360.html">
-        <span class="k">Product 02 · Time Cost 360</span>
-        <h3>Project cost and timesheets</h3>
-        <p>Cost against budget for each project, a weekly timesheet, and screens that change with each role.</p>
-        <div class="stats">
-          <div><b>3</b>roles</div>
-          <div><b>RM</b>cost in real time</div>
-          <div><b>1</b>login</div>
-        </div>
-        <span class="go">Open Time Cost 360 →</span>
-      </a>
-    </div>
-
-    <p class="kicker soon-kicker">Coming next</p>
-    <div class="doors soon-doors">
-      <a class="door soon" href="teaser/clinic.html">
-        <span class="k">Product 03 · Coming soon</span>
-        <h3>Clinic appointment system</h3>
-        <p>Bookings, a check-in screen for patients, a consultation queue, and reminders by WhatsApp or SMS for clinics with one or more branches.</p>
-        <span class="go">See the preview →</span>
-      </a>
-
-      <a class="door soon" href="teaser/signage.html">
-        <span class="k">Product 04 · Coming soon</span>
-        <h3>Digital signage</h3>
-        <p>Manage screens in shops, offices and waiting areas: playlists, time-based schedules, and live data shown on the screen.</p>
-        <span class="go">See the preview →</span>
-      </a>
-
-      <a class="door soon" href="teaser/signing.html">
-        <span class="k">Product 05 · Coming soon</span>
-        <h3>Digital signing</h3>
-        <p>Send forms and documents for online signature, with a signed record kept for each one.</p>
-        <span class="go">See the preview →</span>
-      </a>
-
-      <a class="door soon" href="teaser/expenses.html">
-        <span class="k">Product 06 · Coming soon</span>
-        <h3>Expense claims</h3>
-        <p>Staff submit claims with receipts, and managers approve them through the same approval steps as leave.</p>
-        <span class="go">See the preview →</span>
-      </a>
     </div>
   </section>
 
@@ -735,5 +860,21 @@ footer { background: rgba(15, 22, 32, .75); backdrop-filter: blur(14px); -webkit
   drawQuote();
 </script>
 
+
+<script>
+/* Warm up a prototype when someone points at its tile, so opening it feels instant. */
+(function () {
+  var done = {};
+  function warm(file) {
+    if (done[file]) return; done[file] = 1;
+    var l = document.createElement('link'); l.rel = 'prefetch'; l.href = file; document.head.appendChild(l);
+  }
+  var files = { leave: 'prototypes/leave.html', timecost360: 'prototypes/timecost360.html', timesheet: 'prototypes/timesheet.html', signage: 'prototypes/signage.html', consultation: 'prototypes/consultation.html' };
+  document.querySelectorAll('.tile[data-prefetch]').forEach(function (t) {
+    var f = files[t.dataset.prefetch]; if (!f) return;
+    ['pointerenter', 'focusin', 'touchstart'].forEach(function (ev) { t.addEventListener(ev, function () { warm('viewer.html'); warm(f); }, { passive: true, once: true }); });
+  });
+})();
+</script>
 </body>
 </html>

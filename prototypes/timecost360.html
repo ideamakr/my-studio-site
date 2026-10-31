@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Time Cost Monitoring – Phase 1 prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--bg:#eaf1fe;--card:#fff;--ink:#111827;--mute:#6b7280;--line:#e8ecf2;--acc:#2563eb;--accbg:#e6efff;--ok:#15803d;--okbg:#e3f6ea;--ot:#b45309;--otbg:#fdebd3;--wip:#1d4ed8;--wipbg:#dfe8fd;--done:#4b5563;--donebg:#e5e7eb;--warn:#fff7e0;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 24px;background:#2563eb;border-bottom:0;color:#fff}
+h1{font-size:17px;margin:0;font-weight:600;color:#fff}h1 small{display:block;font-weight:400;color:#dbe7ff;font-size:12px}
+.seg{display:flex;background:var(--bg);border-radius:8px;padding:3px;border:1px solid var(--line)}
+.seg button{border:0;background:none;color:var(--mute);padding:7px 14px;border-radius:6px;font:inherit;font-weight:500;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--acc);color:#fff}
+.seg button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,tr:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+main{max-width:1180px;margin:0 auto;padding:20px 24px 60px}
+.note{background:var(--warn);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--mute);margin-bottom:16px}
+.tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.tabs button{border:0;background:none;font:inherit;font-weight:500;color:var(--mute);padding:8px 0;cursor:pointer;border-bottom:3px solid transparent}
+.tabs button[aria-selected=true]{color:var(--ink);border-color:var(--acc)}
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+input,select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:7px 10px;min-width:0}
+.tw{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--mute);font-size:13px;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+tbody tr.row{cursor:pointer}tbody tr.row:hover{background:var(--bg)}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.Open{background:var(--okbg);color:var(--ok)}.WIP{background:var(--wipbg);color:var(--wip)}.Completed,.Cancelled{background:var(--donebg);color:var(--done)}.bad,.Rejected{background:rgba(220,38,38,.16);color:#dc2626}.ok{background:var(--okbg);color:var(--ok)}.amb{background:var(--otbg);color:var(--ot)}td .pill{white-space:nowrap}
+.ended{display:inline-block;margin-left:6px;font-size:12px;color:var(--ot);border:1px solid var(--ot);border-radius:99px;padding:1px 8px}
+.ref{font-weight:600;white-space:nowrap}.sub{color:var(--mute);font-size:13px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.back{border:0;background:none;color:var(--acc);font:inherit;font-weight:500;cursor:pointer;padding:0;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
+.stat{border:1px solid var(--line);border-radius:8px;padding:10px 12px}.stat b{display:block;font-size:22px;font-variant-numeric:tabular-nums}.stat span{font-size:13px;color:var(--mute)}
+.bar{height:8px;border-radius:4px;background:var(--bg);overflow:hidden;display:flex;min-width:90px}.bar i{display:block;height:100%}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:6px;padding:8px 16px;font:inherit;font-weight:600;cursor:pointer}
+.btn.ghost{background:none;color:var(--acc);border:1px solid var(--acc)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:end;margin:14px 0}
+label{font-size:13px;color:var(--mute);display:grid;gap:3px}
+.results{display:grid;gap:8px;margin-top:10px}
+.res{display:flex;justify-content:space-between;gap:10px;text-align:left;width:100%;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:10px 14px;font:inherit;cursor:pointer}
+.res:hover{border-color:var(--acc)}
+.top{align-items:center}.top .seg{flex:none}
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(255px,1fr);gap:12px;overflow-x:auto;align-items:start;padding-bottom:8px}
+.col{background:rgba(120,140,150,.13);border-radius:14px;padding:10px;min-height:140px;border-top:3px solid var(--line)}
+.c-Open{border-top-color:var(--ok)}.c-WIP{border-top-color:var(--wip)}.c-Completed,.c-Cancelled{border-top-color:var(--done)}.c-Rejected{border-top-color:#dc2626}
+.col h3{font-size:13px;margin:2px 4px 10px;display:flex;justify-content:space-between;color:var(--mute);font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:11px 12px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 3px rgba(16,24,40,.06)}
+.card:hover{border-color:var(--acc)}.card .ct{font-weight:600;line-height:1.3}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.cf{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:13px}
+.avs{display:flex}.av{width:26px;height:26px;border-radius:50%;color:#fff;font-size:11px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--card);margin-left:-6px}.av:first-child{margin-left:0}
+.calh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:17px}
+.calw{overflow-x:auto}.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));min-width:760px;background:var(--line);gap:1px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.dow{background:var(--card);padding:8px;font-size:13px;font-weight:600;color:var(--mute)}
+.day{background:var(--card);min-height:104px;padding:6px}.day.off{background:var(--bg)}.day.today{box-shadow:inset 0 0 0 2px var(--acc)}
+.dn{font-size:13px;color:var(--mute);font-weight:600}.today .dn{color:var(--acc)}
+.chip{display:block;width:100%;text-align:left;border:0;border-radius:5px;padding:3px 6px;margin-top:4px;font:inherit;font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.chip:hover{filter:brightness(.95)}
+.attn{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+.attn button{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font:inherit;color:var(--ink);cursor:pointer}
+.attn button[aria-pressed=true]{border-color:var(--acc);box-shadow:0 0 0 2px var(--accbg)}
+.attn button{display:flex;align-items:center;gap:12px}.ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}.ic.mute{background:var(--bg);color:var(--mute)}
+.attn b{display:block;font-size:24px;line-height:1.2;font-variant-numeric:tabular-nums}
+.attn b.bad,.attn b.amb,.attn b.mute,.attn b.zero{background:none}.attn b.bad{color:#dc2626}.attn b.amb{color:var(--ot)}.attn b.mute,.attn b.zero{color:var(--mute)}
+.meter{height:6px;border-radius:3px;background:var(--bg);overflow:hidden;margin:4px 0;min-width:90px}.meter i{display:block;height:100%;background:var(--acc)}.meter.amb i{background:var(--ot)}.meter.bad i{background:#dc2626}
+.nofil input,.nofil select{display:none}
+.pdr{display:none;margin-bottom:12px}.pdr b{font-size:18px}
+.sh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:6px 0 10px}.sh h3{margin:0}
+.rk{display:inline-block;width:24px;height:24px;border-radius:50%;background:var(--bg);text-align:center;line-height:24px;font-weight:600;font-size:12px}.rk.top{background:var(--accbg);color:var(--acc)}
+td .av{margin:0 6px 0 0;vertical-align:middle}
+header .seg{background:rgba(255,255,255,.16);border-color:transparent}header .seg button{color:#dbe7ff}header .seg button[aria-pressed=true]{background:#fff;color:#2563eb}
+.app{display:flex;min-height:100vh}
+.side{width:260px;flex:none;background:linear-gradient(180deg,#1d4ed8 0%,#15338f 48%,#0b1b4d 100%);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}.side.hid{display:none}
+.brand{display:flex;gap:10px;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.14)}.brand b{display:block;font-size:16px;line-height:1.2}.brand small{font-size:12px;color:#bcd0ff}
+.logo{width:42px;height:42px;border-radius:10px;background:#fff;color:#1d4ed8;display:flex;align-items:center;justify-content:center;flex:none}
+.menu{padding:10px 0;flex:1}
+.mi{display:flex;align-items:center;gap:12px;width:100%;padding:11px 20px;background:none;border:0;border-left:3px solid transparent;color:#dbe7ff;font:inherit;font-weight:500;cursor:pointer;text-align:left}
+.mi:hover{background:rgba(255,255,255,.08)}.mi.on{background:rgba(255,255,255,.15);border-left-color:#8bb8ff;color:#fff}
+.mi:focus-visible{outline:2px solid #fff;outline-offset:-2px}.mi .chev{margin-left:auto;transition:transform .15s}.mi[aria-expanded=true] .chev{transform:rotate(90deg)}
+.sm .mi{padding:8px 20px 8px 54px;font-weight:400;font-size:14px}.sm .mi.on{background:none;border-left-color:transparent;font-weight:600}
+.sfoot{padding:14px 20px;font-size:12px;color:#a9bcf0;border-top:1px solid rgba(255,255,255,.14)}
+.shell{flex:1;min-width:0;display:flex;flex-direction:column}
+header.top{display:flex;gap:12px;align-items:center;justify-content:flex-start;padding:12px 24px;background:#fff;border-bottom:1px solid var(--line);color:var(--ink);position:sticky;top:0;z-index:5}
+.sbox{flex:1;max-width:420px;position:relative}.sbox svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--mute)}.sbox input{width:100%;border-radius:99px;padding:8px 14px 8px 40px;background:var(--bg);border-color:transparent}
+.ib{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}.bd{position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:#dc2626;border:2px solid #fff}
+.who{display:flex;align-items:center;gap:10px;text-align:right;line-height:1.25}.who small{display:block;color:var(--mute);font-size:12px}
+.body{display:flex;gap:20px;align-items:flex-start;padding-right:24px}.body main{flex:1;min-width:0;max-width:none;margin:0;padding:22px 0 60px 24px}
+.rpanel{width:300px;flex:none;padding-top:22px;display:grid;gap:18px}.rpanel h4{font-size:13px;color:var(--mute);margin:0 0 8px;font-weight:600}
+.mc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.mg{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:13px;gap:2px}.mh{background:#111827;color:#fff;font-weight:600;font-size:11px;padding:4px 0}.mh:first-child{border-radius:6px 0 0 6px}.mh:nth-child(7){border-radius:0 6px 6px 0}
+.md{padding:6px 0;position:relative;border-radius:50%;margin:2px}.md.t{background:var(--acc);color:#fff;font-weight:600}.md i{position:absolute;left:50%;bottom:0;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--acc)}.md i.r{background:#dc2626}.md.t i{background:#fff}
+.act{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:8px;padding:8px 10px;font-size:13px}.act>div:first-child{display:flex;justify-content:space-between;gap:8px}.act.r{border-left-color:#dc2626}.act.a{border-left-color:#f59e0b}.act.g{border-left-color:#16a34a}
+.link{border:0;background:none;color:var(--acc);font:inherit;font-weight:500;cursor:pointer;padding:0}
+@media(max-width:1180px){.body{flex-direction:column;padding-right:0}.rpanel{width:100%;padding:0 24px 40px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}}
+@media(max-width:860px){.app{flex-direction:column}.side{width:100%;height:auto;position:static}.body main{padding-left:14px;padding-right:14px}header.top{padding:10px 14px}.who div{display:none}}
+@media print{.side,.rpanel,header.top{display:none!important}.app,.shell,.body{display:block}.body main{padding:0}}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:8px;font-weight:500}
+.hide{display:none}
+@page{size:A4 landscape;margin:12mm}
+@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}header,.note,.noprint,.toast,.tabs,.tools,.seg,.back,.calh span{display:none!important}
+body{background:#fff;color:#000}.panel,.tw,.card,.stat,.attn button{border-color:#bbb;box-shadow:none}main{padding:0;max-width:none}.tw,.calw,.board{overflow:visible}table{font-size:11px}th,td{padding:6px 8px}
+.board{grid-auto-flow:row;grid-template-columns:repeat(5,1fr)}.cal{min-width:0}.card,tr,.day{break-inside:avoid}.pdr{display:block}}}
+@media(max-width:640px){header,main{padding-left:14px;padding-right:14px}}
+@media(prefers-reduced-motion:no-preference){.toast{animation:in .2s}@keyframes in{from{opacity:0;transform:translate(-50%,8px)}}}
+</style></head>
+<body>
+<div class="app"><aside id="sb" class="side noprint"></aside><div class="shell">
+<header class="top noprint"><button class="ib" id="hb" aria-label="Show or hide menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+<div class="sbox"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="gs" type="search" placeholder="Search customer or project reference" aria-label="Search projects"></div>
+<button class="ib" id="bell" aria-label="Needs attention" style="margin-left:auto;position:relative"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 0 0 4 0"/></svg><span class="bd"></span></button>
+<select id="role" aria-label="View as role"><option value="0">View as: Leader / HOD</option><option value="1">View as: Manager</option><option value="2">View as: Admin</option><option value="3">View as: Staff</option></select><div class="who"><div><b id="wr">Leader / HOD</b><small id="wn">Hana Rahim</small></div><span class="av" id="wa" style="background:#2563eb;width:38px;height:38px;font-size:14px;margin:0">HR</span></div></header>
+<div class="body"><main>
+ <div class="note noprint">Project data would be read from the existing database; timesheets would be saved in the new one. Hours here come only from submitted timesheets. Budget and cost figures (RM) are illustrative sample values; the real source fields and formulas are still to be confirmed.</div>
+ <section id="leader"></section>
+ <section id="staff" class="hide"></section>
+</main><aside id="rp" class="rpanel noprint hide"></aside></div></div></div>
+<div id="toast" class="toast hide" role="status"></div>
+<script>
+const P=[
+{id:"AUD-2026-014",cust:"GOOD VIEW STEEL SDN. BHD.",ref:"1042079 H",work:"Audit",year:"YE 31.12.2025",team:"Team A",hby:2,status:"WIP",ended:false,staff:["Aisyah R.","Daniel T.","Mei Ling"]},
+{id:"AUD-2026-021",cust:"GOOD VIEW INDUSTRIES SDN. BHD.",ref:"1045842 T",work:"Audit",year:"YE 31.12.2025",team:"Team A",hby:2,status:"WIP",ended:false,staff:["Farid H.","Mei Ling"]},
+{id:"TAX-2026-007",cust:"GOOD VIEW STEEL SDN. BHD.",ref:"1042079 H",work:"Tax",year:"YA 2025",team:"Team Tax",hby:1,status:"WIP",ended:false,staff:["Priya K.","Daniel T."]},
+{id:"AUD-2026-009",cust:"GOOD VIEW INDUSTRIES SDN. BHD.",ref:"1045842 T",work:"Tax",year:"YA 2024",team:"Team Tax",hby:1,status:"Open",ended:true,staff:["Aisyah R."]},
+{id:"ADV-2026-003",cust:"GOOD VIEW STEEL SDN. BHD.",ref:"1042079 H",work:"MBRS",year:"YE 31.08.2024",team:"Team MBRS",hby:2,status:"Open",ended:false,staff:["Farid H.","Priya K."]},
+{id:"AUD-2026-030",cust:"GOOD VIEW STEEL SDN. BHD.",ref:"1042079 H",work:"Audit",year:"YE 31.12.2024",team:"Team C",hby:2,status:"WIP",ended:false,staff:["Daniel T.","Farid H."]},
+{id:"ADV-2026-011",cust:"GOOD VIEW INDUSTRIES SDN. BHD.",ref:"1045842 T",work:"Audit",year:"YE 31.12.2023",team:"Team C",hby:3,status:"WIP",ended:false,staff:["Mei Ling","Aisyah R."]},
+{id:"MBR-2026-002",cust:"GOOD VIEW INDUSTRIES SDN. BHD.",ref:"1045842 T",work:"MBRS",year:"YE 31.08.2024",team:"Team MBRS",hby:2,status:"Open",ended:false,staff:["Farid H.","Priya K."]},
+{id:"AUD-2025-088",cust:"BLUEWAVE RETAIL SDN. BHD.",ref:"1039120 K",work:"Audit",year:"YE 31.12.2024",team:"Team B",hby:2,status:"Completed",ended:true,staff:["Daniel T.","Mei Ling"]},
+{id:"TAX-2025-041",cust:"PIONEER EDUCATION SDN. BHD.",ref:"1037764 M",work:"Tax",year:"YA 2024",team:"Team Tax",hby:1,status:"Completed",ended:false,staff:["Priya K."]},
+{id:"AUD-2025-070",cust:"CRESCENT TELECOMS SDN. BHD.",ref:"1041355 R",work:"Audit",year:"YE 31.12.2024",team:"-Nil-",hby:3,status:"Cancelled",ended:true,staff:["Farid H."]},
+{id:"TAX-2025-019",cust:"LOTUS PLANTATIONS SDN. BHD.",ref:"1036480 S",work:"Tax",year:"YA 2023",team:"Team Tax",hby:1,status:"Rejected",ended:true,staff:["Priya K."]},
+{id:"AUD-2025-060",cust:"MERIDIAN SHIPPING SDN. BHD.",ref:"1040217 L",work:"Audit",year:"YE 31.12.2024",team:"Team A",hby:2,status:"Completed",ended:true,staff:["Aisyah R.","Daniel T."]},
+{id:"AUD-2025-064",cust:"APEX CONSTRUCTION SDN. BHD.",ref:"1040982 P",work:"Audit",year:"YE 31.12.2024",team:"Team C",hby:3,status:"Completed",ended:true,staff:["Daniel T.","Farid H.","Mei Ling"]},
+{id:"ADV-2025-020",cust:"HORIZON CAPITAL SDN. BHD.",ref:"1038805 J",work:"MBRS",year:"YE 31.12.2024",team:"Team MBRS",hby:2,status:"Completed",ended:true,staff:["Farid H.","Priya K."]},
+{id:"TAX-2025-050",cust:"SUNRISE BAKERIES SDN. BHD.",ref:"1039873 W",work:"Tax",year:"YA 2024",team:"Team Tax",hby:1,status:"Completed",ended:true,staff:["Priya K.","Aisyah R."]}];
+const F={"MBR-2026-002":{est:24,due:"2026-12-31",bud:null,cost:0},"AUD-2026-014":{est:60,due:"2026-10-05",bud:42000,cost:18500},"AUD-2026-021":{est:40,due:"2026-10-22",bud:30000,cost:4200},"TAX-2026-007":{est:40,due:"2026-10-31",bud:18000,cost:16500},"AUD-2026-009":{est:16,due:"2026-10-14",bud:null,cost:6100},"ADV-2026-003":{est:32,due:"2026-10-28",bud:null,cost:19800},"AUD-2025-088":{est:10,due:"2026-02-28",done:"2026-02-12",bud:36000,cost:33800},"TAX-2025-041":{est:5,due:"2026-01-31",done:"2026-02-14",bud:15000,cost:14200},"AUD-2026-030":{est:16,due:"2026-09-15",bud:40000,cost:31000},"ADV-2026-011":{est:20,due:"2026-10-16",bud:25000,cost:25000},"AUD-2025-070":{est:20,due:"2026-03-31",bud:null,cost:3500},"TAX-2025-019":{est:10,due:"2025-12-31",bud:10000,cost:0},"AUD-2025-060":{est:10,due:"2026-01-31",done:"2026-01-28",bud:30000,cost:27000},"AUD-2025-064":{est:12,due:"2026-03-15",done:"2026-03-10",bud:28000,cost:29500},"ADV-2025-020":{est:8,due:"2026-04-30",done:"2026-05-12",bud:22000,cost:20500},"TAX-2025-050":{est:7,due:"2026-06-30",done:"2026-06-25",bud:9000,cost:7800}};
+const REC=["Completed","Cancelled","Rejected"],TODAY="2026-10-08";
+const E=[];const seed=(p,s,d,n,o,k,t)=>E.push({p,s,d,n,o,k,t});
+seed("AUD-2026-014","Aisyah R.","2026-09-28",8,2,"Productive","Fieldwork: receivables confirmation");
+seed("AUD-2026-014","Daniel T.","2026-09-29",8,0,"Productive","Inventory count review");
+seed("AUD-2026-014","Mei Ling","2026-09-30",7,3,"Productive","Draft working papers");
+seed("AUD-2026-021","Farid H.","2026-10-01",6,0,"Non-productive","Planning meeting");
+seed("TAX-2026-007","Priya K.","2026-09-30",8,1,"Productive","Tax computation");
+seed("TAX-2026-007","Daniel T.","2026-10-02",5,0,"Productive","Schedule review");
+seed("AUD-2026-009","Aisyah R.","2026-09-22",4,0,"Productive","Follow-up queries");
+seed("ADV-2026-003","Farid H.","2026-10-02",8,4,"Productive","Workshop and report");
+seed("ADV-2026-003","Priya K.","2026-10-02",8,0,"Productive","Data analysis");
+seed("AUD-2025-088","Daniel T.","2026-02-12",8,0,"Productive","Final sign-off");
+seed("TAX-2025-041","Priya K.","2026-01-20",6,0,"Productive","Filing");
+seed("AUD-2026-030","Daniel T.","2026-09-10",8,2,"Productive","Fieldwork");
+seed("AUD-2026-030","Farid H.","2026-09-12",8,0,"Productive","Testing of controls");
+seed("ADV-2026-011","Mei Ling","2026-10-03",8,5,"Productive","Revenue review");
+seed("ADV-2026-011","Aisyah R.","2026-10-04",8,3,"Productive","Reporting");
+seed("AUD-2025-070","Farid H.","2026-02-02",3,0,"Productive","Planning before cancellation");
+seed("AUD-2025-060","Aisyah R.","2026-01-20",8,0,"Productive","Final review");
+seed("AUD-2025-064","Farid H.","2026-03-05",6,0,"Productive","Fieldwork");
+seed("AUD-2025-064","Mei Ling","2026-03-06",4,0,"Productive","Reporting");
+seed("ADV-2025-020","Priya K.","2026-05-02",5,0,"Productive","Analysis");
+seed("ADV-2025-020","Farid H.","2026-05-05",4,0,"Productive","Report");
+seed("TAX-2025-050","Priya K.","2026-06-20",6,0,"Productive","Filing");
+seed("AUD-2026-014","Aisyah R.","2026-10-05",8,0,"Productive","Fieldwork");
+seed("ADV-2026-011","Aisyah R.","2026-10-06",8,2,"Productive","Revenue review");
+seed("ADV-2026-011","Aisyah R.","2026-10-07",4,0,"Productive","Reporting");
+seed("AUD-2026-014","Daniel T.","2026-10-05",8,0,"Productive","Inventory count");
+seed("TAX-2026-007","Daniel T.","2026-10-06",8,1,"Productive","Tax schedules");
+seed("TAX-2026-007","Daniel T.","2026-10-07",6,0,"Productive","Review");
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tot=id=>E.filter(e=>e.p===id).reduce((a,e)=>({n:a.n+e.n,o:a.o+e.o}),{n:0,o:0});
+const rm=x=>"RM "+x.toLocaleString("en-MY"),dt=i=>new Date(i).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+function sched(p){const d=F[p.id];if(p.status==="Completed"){const l=d.done>d.due;return[l?"Completed late":"Completed on time",l?"bad":"ok"]}if(p.status==="Cancelled"||p.status==="Rejected")return["Not applicable","Completed"];return d.due<TODAY?["Delayed","bad"]:["On track","ok"]}
+const schedCell=p=>{const[l,c]=sched(p);return`<span class="pill ${c}">${l}</span><div class="sub">Due ${dt(F[p.id].due)}</div>`};
+const costBadge=p=>{const d=F[p.id],r=d.bud?d.cost/d.bud:0;return r>=1?'<span class="pill bad">Limit reached</span>':r>=.9?'<span class="pill amb">Near limit</span>':""};
+const costCell=p=>`${rm(F[p.id].cost)}<div class="sub">${F[p.id].bud?"of "+rm(F[p.id].bud):"No limit set"}</div>${costBadge(p)}`;
+const f=x=>x.toFixed(1).replace(/\.0$/,"");
+let tab="active",q="",fs="All",sel=null,draft=[],cur=null,me="Priya K.";
+function toast(m){const t=$("toast");t.textContent=m;t.classList.remove("hide");setTimeout(()=>t.classList.add("hide"),2400)}
+
+let vw="dash",pg="dash",asg="All",cy=2026,cm=9,att=null;
+const hrsN=p=>{const t=tot(p.id);return t.n+t.o},lastDt=p=>E.filter(e=>e.p===p.id).map(e=>e.d).sort().pop()||"";
+const AT=[["delayed","Delayed",p=>sched(p)[0]==="Delayed","bad"],["cost","Near or at cost limit",p=>F[p.id].bud&&F[p.id].cost/F[p.id].bud>=.9,"amb"],["hours","Over estimated hours",p=>hrsN(p)>F[p.id].est,"amb"],["idle","No hours in 14 days",p=>lastDt(p)&&lastDt(p)<"2026-09-24","mute"]];
+const sv=d=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICON={delayed:sv('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),cost:sv('<path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v11a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1V10a1 1 0 0 0-1-1H5a2 2 0 0 1-2-2z"/><circle cx="16.5" cy="14.5" r="1"/>'),hours:sv('<path d="M6 3h12M6 21h12M7 3v3a5 5 0 0 0 2 4l1 2-1 2a5 5 0 0 0-2 4v3M17 3v3a5 5 0 0 1-2 4l-1 2 1 2a5 5 0 0 1 2 4v3"/>'),idle:sv('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>')};
+const attnHtml=()=>{const a=P.filter(p=>!REC.includes(p.status));return`<div class="attn" role="group" aria-label="Needs attention">${AT.map(([k,l,fn,c])=>{const n=a.filter(fn).length;return`<button data-a="${k}" aria-pressed="${att===k}"><span class="ic ${c}">${ICON[k]}</span><span><b class="${n?c:"zero"}">${n}</b><span class="sub">${l}</span></span></button>`}).join("")}</div>`};
+const meterCell=p=>{const e=F[p.id].est,a=hrsN(p),r=a/e,o=tot(p.id).o,c=r>1?"bad":r>=.9?"amb":"";return`<div class="sub">${f(a)} of ${e} h${o?` (${f(o)} OT)`:""}</div><div class="meter ${c}"><i style="width:${Math.min(100,r*100)}%"></i></div>${r>1?'<span class="pill bad">Over estimate</span>':""}`};
+let ps="rate";
+const rt=r=>Math.round(r*100),rate=r=>r.n?r.on/r.n:0,rc=r=>r>=.8?"":r>=.5?"amb":"bad",printPage=()=>{try{window.print()}catch(e){toast("Printing is not available in this preview")}};
+const PT={list:"Projects: List",board:"Projects: Board",cal:"Projects: Calendar",ts:"Timesheets: Submissions",perf:"Performance: Delivery scorecard",map:"Data mapping: existing system columns",bud:"Budget limits"};
+const TTL={bud:()=>"Budget limits",map:()=>"Data mapping",dash:()=>"Dashboard",list:()=>tab==="active"?"Active / Ongoing projects":"Recent projects",board:()=>"Project board",cal:()=>"Due-date calendar",ts:()=>"Timesheet submissions",perf:()=>"Delivery scorecard"};
+const pdr=t=>`<div class="pdr"><b>Time Cost Monitoring: ${t||TTL[vw]()}</b><div class="sub">Printed ${dt(TODAY)}${t?"":` · Assignee: ${asg} · Status: ${fs}${q?` · Search: ${esc(q)}`:""}${att?` · Attention: ${AT.find(a=>a[0]===att)[1]}`:""}`}</div></div>`;
+function perfData(){const done=P.filter(p=>p.status==="Completed"),on=p=>F[p.id].done<=F[p.id].due,ib=p=>F[p.id].cost<=F[p.id].bud,agg=l=>({n:l.length,on:l.filter(on).length,bud:l.filter(ib).length});
+ return{tot:agg(done),staff:names().map(u=>{const a=P.filter(p=>!REC.includes(p.status)&&p.staff.includes(u));return{u,...agg(done.filter(p=>p.staff.includes(u))),act:a.length,del:a.filter(p=>sched(p)[0]==="Delayed").length}}),teams:[...new Set(done.map(p=>p.team))].map(t=>({u:t,...agg(done.filter(p=>p.team===t))}))}}
+const srt=a=>[...a].sort((x,y)=>ps==="n"?y.n-x.n||rate(y)-rate(x):rate(y)-rate(x)||y.n-x.n);
+const ptbl=(rows,st,lbl)=>`<div class="tw"><table><thead><tr><th>Rank</th><th>${lbl}</th><th class="num">Completed</th><th class="num">On time</th><th style="min-width:150px">On-time rate</th><th class="num">Within budget</th>${st?'<th class="num">Active now</th><th class="num">Delayed now</th>':""}</tr></thead><tbody>${rows.map((r,i)=>{const x=rate(r);return`<tr><td><span class="rk ${i<3?"top":""}">${i+1}</span></td><td>${st?av(r.u):""}<b>${esc(r.u)}</b>${r.n&&r.n<3?' <span class="pill Completed" title="Fewer than 3 completed projects">Low sample</span>':""}</td><td class="num">${r.n}</td><td class="num">${r.on}</td><td><b>${rt(x)}%</b><div class="meter ${rc(x)}"><i style="width:${rt(x)}%"></i></div></td><td class="num">${r.bud}</td>${st?`<td class="num">${r.act}</td><td class="num">${r.del?`<span class="pill bad">${r.del}</span>`:0}</td>`:""}</tr>`}).join("")}</tbody></table></div>`;
+const perfHtml=()=>{const d=perfData(),t=d.tot;return`<div class="grid" style="margin-top:0"><div class="stat"><b>${t.n}</b><span>Projects completed</span></div><div class="stat"><b>${rt(rate(t))}%</b><span>Delivered on time (${t.on} of ${t.n})</span></div><div class="stat"><b>${rt(t.bud/t.n)}%</b><span>Completed within budget (${t.bud} of ${t.n})</span></div></div>
+<div class="sh"><h3>Top performers</h3><label class="sub noprint">Rank by <select id="ps"><option value="rate" ${ps==="rate"?"selected":""}>On-time rate</option><option value="n" ${ps==="n"?"selected":""}>Projects completed</option></select></label></div>${ptbl(srt(d.staff),true,"Staff")}
+<div class="sh" style="margin-top:20px"><h3>By team</h3></div>${ptbl(srt(d.teams),false,"Team")}
+<p class="sub">On time means completed on or before the due date. A project counts for every staff member assigned to it. Figures use sample completed projects; real ones need the completion date field from the existing system. Treat rankings as a conversation starter: small samples and project difficulty can distort them.</p>`};
+const PER=["2026-10-05","2026-10-18"],SUB={"Aisyah R.":"2026-10-07 17:10","Daniel T.":"2026-10-08 09:02"},DRF={"Farid H.":18,"Priya K.":34};
+const TS=Object.fromEntries([...new Set(P.flatMap(p=>p.staff))].sort().map(u=>[u,SUB[u]?["Submitted",E.filter(e=>e.s===u&&e.d>=PER[0]&&e.d<=PER[1]).reduce((a,e)=>a+e.n+e.o,0),SUB[u]]:DRF[u]?["Draft",DRF[u],null]:["Not started",0,null]]));
+const tsHtml=()=>{const n=names(),sub=n.filter(u=>TS[u][0]==="Submitted").length;
+return`<div class="panel"><b>Current period: 5 – 18 Oct 2026</b> <span class="sub">(biweekly, to be confirmed)</span><div class="grid"><div class="stat"><b>${sub} of ${n.length}</b><span>Timesheets submitted</span></div><div class="stat"><b>${n.length-sub}</b><span>Still missing</span></div></div><div class="meter"><i style="width:${sub/n.length*100}%"></i></div><p class="sub">Dashboard hours only include submitted timesheets, so every missing one understates project totals.</p><button class="btn" data-rm="all" ${sub===n.length?"disabled":""}>Remind everyone missing</button></div>
+<div class="tw"><table><thead><tr><th>Staff</th><th class="num">Active projects</th><th>Status</th><th class="num">Hours this period</th><th>Last submitted</th><th></th></tr></thead><tbody>${n.map(u=>{const[st,h,a]=TS[u],c=st==="Submitted"?"ok":st==="Draft"?"amb":"bad";return`<tr><td class="ref">${u}</td><td class="num">${P.filter(p=>!REC.includes(p.status)&&p.staff.includes(u)).length}</td><td><span class="pill ${c}">${st}</span></td><td class="num">${f(h)}</td><td>${a||'<span class="sub">Not yet</span>'}</td><td>${st==="Submitted"?"":`<button class="btn ghost" data-rm="${u}">Send reminder</button>`}</td></tr>`}).join("")}</tbody></table></div>`};
+const ALLS=["Open","WIP","Completed","Cancelled","Rejected"],names=()=>[...new Set(P.flatMap(p=>p.staff))].sort();
+const hue=n=>[...n].reduce((a,c)=>a+c.charCodeAt(0),0)%360;
+const av=n=>`<span class="av" title="${esc(n)}" style="background:hsl(${hue(n)} 45% 40%)">${n.split(" ").map(w=>w[0]).join("")}</span>`;
+const vis=l=>l.filter(p=>(!att||!REC.includes(p.status)&&AT.find(a=>a[0]===att)[2](p))&&(fs==="All"||p.status===fs)&&(asg==="All"||p.staff.includes(asg))&&(p.ref+" "+p.cust).toLowerCase().includes(q.toLowerCase()));
+const hrs=p=>{const t=tot(p.id);return f(t.n+t.o)};
+const stl=x=>x==="WIP"?"W.I.P":x;
+const listHtml=l=>`<div class="tw"><table><thead><tr><th>Customer name</th><th>Ref No</th><th>Work</th><th>Year</th><th>Team</th><th>Status</th><th class="num" title="Meaning to be confirmed">HBy</th><th title="Checkbox in the existing system; meaning to be confirmed">-E-</th><th>Assigned staff</th><th>Schedule</th><th class="num">Total hours</th><th>Hours vs estimate</th><th class="num">Cost vs budget</th></tr></thead><tbody>
+${l.map(p=>{const t=tot(p.id);return`<tr class="row" tabindex="0" data-id="${p.id}"><td>${esc(p.cust)}</td><td class="ref">${p.ref}</td><td>${p.work}</td><td>${p.year}</td><td>${p.team}</td><td><span class="pill ${p.status}">${stl(p.status)}</span></td><td class="num">${p.hby}</td><td><input type="checkbox" disabled ${p.ended?"checked":""} aria-label="-E-"></td><td>${p.staff.join(", ")}</td><td>${schedCell(p)}</td><td class="num">${f(t.n+t.o)}${t.o?`<div class="sub">${f(t.o)} OT</div>`:""}</td><td>${meterCell(p)}</td><td class="num">${costCell(p)}</td></tr>`}).join("")||'<tr><td colspan="13" class="sub">No projects match these filters.</td></tr>'}</tbody></table></div>`;
+const boardHtml=l=>`<div class="board">${ALLS.filter(st=>fs==="All"||fs===st).map(st=>{const c=l.filter(p=>p.status===st);return`<div class="col c-${st}"><h3><span>${stl(st)}</span><span>${c.length}</span></h3>${c.map(p=>{const[sl,sc]=sched(p);return`<div class="card" tabindex="0" data-id="${p.id}"><div class="ct">${esc(p.cust)}</div><div class="sub">${p.ref} · ${p.work} · ${p.year}</div><div class="sub">${p.team} · HBy ${p.hby}</div>
+<div class="tags">${sl!=="Not applicable"?`<span class="pill ${sc}">${sl}</span>`:""}${costBadge(p)}${p.ended?'<span class="pill amb">Ended (-E-)</span>':""}</div>
+<div class="sub" style="margin-top:8px">Due ${dt(F[p.id].due)} · ${rm(F[p.id].cost)}${F[p.id].bud?" of "+rm(F[p.id].bud):" · no limit"}</div>
+<div style="margin-top:8px">${meterCell(p)}</div><div class="cf"><span class="ref">${p.ref}</span><span class="avs">${p.staff.map(av).join("")}</span></div></div>`}).join("")||'<div class="sub" style="padding:6px">Nothing here.</div>'}</div>`}).join("")}</div>`;
+function calHtml(l){
+ const first=new Date(cy,cm,1),st=(first.getDay()+6)%7,dim=new Date(cy,cm+1,0).getDate(),iso=d=>`${cy}-${String(cm+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+ const cells=Array.from({length:Math.ceil((st+dim)/7)*7},(_,i)=>{const d=i-st+1;return d>=1&&d<=dim?d:0});
+ const chip=p=>{const[sl,sc]=sched(p),c=sc==="bad"?"bad":p.status==="Completed"?"ok":p.status;return`<button class="chip ${c}" data-id="${p.id}" title="${p.ref} · ${p.work} ${p.year} · ${stl(p.status)} · ${sl}">${esc(p.cust)}</button>`};
+ return`<div class="calh"><b>${first.toLocaleDateString("en-GB",{month:"long",year:"numeric"})}</b><span><button class="btn ghost" data-n="-1">Previous</button> <button class="btn ghost" data-n="0">Today</button> <button class="btn ghost" data-n="1">Next</button></span></div>
+ <div class="calw"><div class="cal">${["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<div class="dow">${d}</div>`).join("")}${cells.map(d=>`<div class="day ${d?"":"off"} ${d&&iso(d)===TODAY?"today":""}">${d?`<span class="dn">${d}</span>`+l.filter(p=>F[p.id].due===iso(d)).map(chip).join(""):""}</div>`).join("")}</div></div>
+ <p class="sub">Projects appear on their due date. Red means delayed or completed late, green means completed on time.</p>`}
+function renderL(){
+ drawRP();if(sel)return detail();
+ const act=P.filter(p=>!REC.includes(p.status)),rec=P.filter(p=>REC.includes(p.status));
+ const opts=["All",...(vw==="list"?(tab==="active"?["Open","WIP"]:REC):ALLS)];if(!opts.includes(fs))fs="All";
+ const tabs=vw==="list"?`<div class="tabs" role="tablist"><button role="tab" aria-selected="${tab==="active"}" data-t="active">Active / Ongoing (${act.length})</button><button role="tab" aria-selected="${tab==="recent"}" data-t="recent">Recent: completed, cancelled, rejected (${rec.length})</button></div>`:"";
+ const body=vw==="bud"?budHtml():vw==="map"?mapHtml():vw==="dash"?dashHtml():vw==="perf"?perfHtml():vw==="ts"?tsHtml():vw==="list"?listHtml(vis(tab==="active"?act:rec)):vw==="board"?boardHtml(vis(P)):calHtml(vis(P));
+ $("leader").innerHTML=`${pdr()}${["ts","perf","dash","map","bud"].includes(vw)?"":attnHtml()}<div class="tools top ${["ts","perf","map","bud"].includes(vw)?"nofil":""} ${vw==="dash"?"hide":""}"><h2 style="margin:0;font-size:20px">${PT[vw]||""}</h2>
+ <input id="q" type="search" placeholder="Search customer or project reference" value="${esc(q)}" aria-label="Search projects" style="flex:1;min-width:180px">
+ <select id="asg" aria-label="Assignee"><option value="All">All assignees</option>${names().map(n=>`<option ${asg===n?"selected":""}>${n}</option>`).join("")}</select>
+ <select id="fs" aria-label="Status">${opts.map(o=>`<option value="${o}" ${fs===o?"selected":""}>${o==="All"?"All statuses":o}</option>`).join("")}</select>${q||asg!=="All"||fs!=="All"||att?'<button class="link noprint" id="clr">Clear filters</button>':""}<button class="btn ghost noprint" id="prt" style="margin-left:auto">Print</button></div>${tabs}${body}`;
+ document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{vw=b.dataset.v;renderL()});
+ document.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{tab=b.dataset.t;fs="All";renderL()});
+ document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>{const n=+b.dataset.n;if(!n){cy=2026;cm=9}else{cm+=n;if(cm<0){cm=11;cy--}if(cm>11){cm=0;cy++}}renderL()});
+ $("q").oninput=e=>{q=e.target.value;const pos=e.target.selectionStart;renderL();$("q").focus();$("q").setSelectionRange(pos,pos)};
+ document.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{att=att===b.dataset.a?null:b.dataset.a;if(att){tab="active";fs="All";if(vw==="ts")vw="list"}renderL()});
+ document.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>toast(b.dataset.rm==="all"?"Reminder sent to "+names().filter(u=>TS[u][0]!=="Submitted").length+" staff":"Reminder sent to "+b.dataset.rm));
+ $("prt").onclick=printPage;wireBud();document.querySelectorAll("#clr,[data-clr]").forEach(b=>b.onclick=()=>{resetF();renderL()});document.querySelectorAll("#leader [data-gl]").forEach(b=>b.onclick=()=>{tab=b.dataset.gl;fs="All";go("list")});if($("ps"))$("ps").onchange=e=>{ps=e.target.value;renderL()};
+ $("fs").onchange=e=>{fs=e.target.value;renderL()};$("asg").onchange=e=>{asg=e.target.value;renderL()};
+ document.querySelectorAll("#leader [data-id]").forEach(r=>{r.onclick=()=>{sel=r.dataset.id;renderL()};r.onkeydown=e=>{if(e.key==="Enter"){sel=r.dataset.id;renderL()}}});
+}
+function detail(){
+ const p=P.find(x=>x.id===sel),t=tot(sel),all=t.n+t.o;
+ const by=p.staff.map(s=>{const r=E.filter(e=>e.p===sel&&e.s===s).reduce((a,e)=>({n:a.n+e.n,o:a.o+e.o}),{n:0,o:0});return{s,...r}});
+ const mx=Math.max(1,...by.map(b=>b.n+b.o));
+ $("leader").innerHTML=`${pdr(p.ref+" · "+p.cust)}<div class="sh"><button class="back" id="bk" style="margin:0">← Back to projects</button><button class="btn ghost noprint" id="dp">Print</button></div>
+ <div class="panel"><h2 style="margin:0">${esc(p.cust)}</h2><div class="sub">${p.ref} · ${p.work} · ${p.year} · ${p.team} · HBy ${p.hby}</div>
+ <div style="margin-top:8px"><span class="pill ${p.status}">${stl(p.status)}</span>${p.ended?'<span class="ended">Ended (-E-)</span>':""} ${schedCell(p).replace(/<div.*$/,"")} ${costBadge(p)}</div>
+ <div class="grid"><div class="stat"><b>${f(all)}</b><span>Total hours</span></div><div class="stat"><b>${f(t.n)}</b><span>Normal hours</span></div><div class="stat"><b style="color:var(--ot)">${f(t.o)}</b><span>Overtime hours</span></div><div class="stat"><b>${p.staff.length}</b><span>Assigned staff</span></div><div class="stat"><b>${rm(F[sel].cost)}</b><span>Cost to date</span></div><div class="stat"><b>${F[sel].bud?rm(F[sel].bud):"Not set"}</b><span>Budget limit</span></div><div class="stat"><b>${f(all)} / ${F[sel].est}</b><span>Hours vs estimate</span></div></div>
+ <div class="sub">Cost and budget are illustrative RM sample values until the source fields and formulas are approved. Due date: ${dt(F[sel].due)}.</div></div>
+ <div class="tw"><table><thead><tr><th>Staff member</th><th class="num">Normal</th><th class="num">Overtime</th><th class="num">Total</th><th style="width:30%">Share of busiest</th></tr></thead><tbody>
+ ${by.map(b=>`<tr><td>${esc(b.s)}</td><td class="num">${f(b.n)}</td><td class="num">${f(b.o)}</td><td class="num"><b>${f(b.n+b.o)}</b></td><td><div class="bar"><i style="width:${b.n/mx*100}%;background:var(--acc)"></i><i style="width:${b.o/mx*100}%;background:var(--ot)"></i></div></td></tr>`).join("")}</tbody></table></div>
+ <p class="sub">Teal is normal time, amber is overtime. Only submitted timesheets count.</p>`;
+ $("bk").onclick=()=>{sel=null;renderL()};$("dp").onclick=printPage;
+}
+
+function renderS(){
+ if(!cur){
+  const names=[...new Set(P.flatMap(p=>p.staff))];
+  $("staff").innerHTML=`<div class="panel"><h2 style="margin:0 0 8px">Find a project</h2>
+  <div class="tools"><label>Signed in as<select id="me">${names.map(n=>`<option ${n===me?"selected":""}>${n}</option>`).join("")}</select></label>
+  <label style="flex:1;min-width:200px">Search<input id="sq" type="search" placeholder="Customer or project reference"></label></div>
+  <div class="sub">Showing projects assigned to you. This eligibility rule is a placeholder until it is confirmed.</div><div id="rs" class="results"></div></div>`;
+  const draw=()=>{const s=$("sq").value.toLowerCase();const r=P.filter(p=>p.staff.includes(me)&&!REC.includes(p.status)&&(p.ref+" "+p.cust).toLowerCase().includes(s));
+   $("rs").innerHTML=r.map(p=>`<button class="res" data-id="${p.id}"><span><b>${p.ref}</b> · ${esc(p.cust)}<div class="sub">${p.work} · ${p.year}</div></span><span class="pill ${p.status}" style="align-self:center">${stl(p.status)}</span></button>`).join("")||'<div class="sub">No assigned projects match.</div>';
+   document.querySelectorAll(".res").forEach(b=>b.onclick=()=>{cur=b.dataset.id;draft=[];renderS()})};
+  $("me").onchange=e=>{me=e.target.value;draw()};$("sq").oninput=draw;draw();return}
+ const p=P.find(x=>x.id===cur),sum=draft.reduce((a,e)=>a+e.n+e.o,0);
+ $("staff").innerHTML=`<button class="back noprint" id="sb">← Back to search</button>
+ <div class="panel"><h2 style="margin:0">Timesheet</h2><div class="sub">${esc(me)} · ${p.ref} · ${esc(p.cust)} · ${p.work} · ${p.year}</div>
+ <form class="form noprint" id="fm" onsubmit="return false">
+  <label>Date<input type="date" id="d" value="2026-10-08"></label>
+  <label>Category<select id="k"><option>Productive</option><option>Non-productive</option></select></label>
+  <label>Normal hours<input type="number" id="n" min="0" max="24" step="0.5" value="8"></label>
+  <label>Overtime hours<input type="number" id="o" min="0" max="24" step="0.5" value="0"></label>
+  <label style="grid-column:span 2">Note<input id="t" placeholder="What did you work on?"></label>
+  <button class="btn ghost" id="add">Add entry</button></form>
+ <div class="tw"><table><thead><tr><th>Date</th><th>Category</th><th class="num">Normal</th><th class="num">Overtime</th><th class="num">Total</th><th>Note</th><th class="noprint"></th></tr></thead><tbody>
+ ${draft.map((e,i)=>`<tr><td>${e.d}</td><td>${e.k}</td><td class="num">${f(e.n)}</td><td class="num">${f(e.o)}</td><td class="num">${f(e.n+e.o)}</td><td>${esc(e.t)}</td><td class="noprint"><button class="back" style="margin:0" data-r="${i}">Remove</button></td></tr>`).join("")||'<tr><td colspan="7" class="sub">No entries yet. Add a row above.</td></tr>'}
+ </tbody></table></div>
+ <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><b>Total: ${f(sum)} hours</b>
+ <span class="noprint"><button class="btn ghost" id="pr" ${draft.length?"":"disabled"}>Print</button> <button class="btn" id="sm" ${draft.length?"":"disabled"}>Submit timesheet</button></span></div></div>`;
+ $("sb").onclick=()=>{cur=null;renderS()};
+ $("add").onclick=()=>{const n=+$("n").value||0,o=+$("o").value||0;if(n+o<=0){toast("Enter normal or overtime hours");return}
+  draft.push({d:$("d").value,k:$("k").value,n,o,t:$("t").value});renderS()};
+ document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{draft.splice(+b.dataset.r,1);renderS()});
+ $("pr").onclick=()=>{try{window.print()}catch(e){toast("Printing is not available in this preview")}};
+ $("sm").onclick=()=>{draft.forEach(e=>E.push({p:cur,s:me,d:e.d,n:e.n,o:e.o,k:e.k,t:e.t}));toast(`Submitted ${f(sum)} hours to ${cur}`);draft=[];cur=null;renderS()};
+}
+const IC={dash:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',map:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>',bud:'<path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v11a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1V10a1 1 0 0 0-1-1H5a2 2 0 0 1-2-2z"/><circle cx="16.5" cy="14.5" r="1"/>',proj:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',time:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',perf:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',chev:'<path d="M9 6l6 6-6 6"/>'};
+const GR=[["dash","Dashboard","dash"],["Projects","proj",[["list","List"],["board","Board"],["cal","Calendar"]]],["Timesheets","time",[["ts","Submissions"],["staff","My timesheet"]]],["Performance","perf",[["perf","Delivery scorecard"]]],["bud","Budget limits","bud"],["map","Data mapping","map"]];
+const openG={Projects:true,Timesheets:true};
+function renderSide(){
+ $("sb").innerHTML=`<div class="brand"><span class="logo">${sv(IC.time)}</span><div><b>Time Cost Monitor</b><small>Phase 1 prototype</small></div></div><nav class="menu" aria-label="Main menu">${GR.map(g=>{
+  if(!Array.isArray(g[2]))return`<button class="mi ${pg===g[0]?"on":""}" data-go="${g[0]}">${sv(IC[g[2]])}${g[1]}</button>`;
+  const on=g[2].some(k=>k[0]===pg),op=openG[g[0]]||on;
+  return`<button class="mi ${on?"on":""}" data-g="${g[0]}" aria-expanded="${op}">${sv(IC[g[1]])}${g[0]}<span class="chev">${sv(IC.chev)}</span></button><div class="sm ${op?"":"hide"}">${g[2].map(k=>`<button class="mi ${pg===k[0]?"on":""}" data-go="${k[0]}">${k[1]}</button>`).join("")}</div>`}).join("")}</nav><div class="sfoot">Sample data only</div>`;
+ $("sb").querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+ $("sb").querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{openG[b.dataset.g]=!(openG[b.dataset.g]||GR.find(g=>g[0]===b.dataset.g)[2].some(k=>k[0]===pg));renderSide()});
+}
+function resetF(){q="";asg="All";fs="All";att=null;if($("gs"))$("gs").value=""}
+function go(k){const grp=x=>["list","board","cal"].includes(x)?"p":x;if(grp(k)!==grp(pg))resetF();pg=k;sel=null;const st=k==="staff";$("leader").classList.toggle("hide",st);$("staff").classList.toggle("hide",!st);
+ if(st){cur=null;renderS();drawRP()}else{vw=k;renderL()}renderSide();window.scrollTo(0,0)}
+const MAP=[["Customer Name","GOOD VIEW STEEL SDN. BHD.","Customer name","Captured",""],["Ref No","1042079 H","Ref No","Captured","The same value repeats for every project of a customer, so it cannot identify a project on its own. Needs a project key (Ref No + Work + Year, or a hidden ID)."],["Work","Tax, MBRS, Audit","Work","Captured","Only these three values appear on this screen."],["Year","YA 2025, YE 31.12.2025","Year","Captured","One column holds two formats: year of assessment (YA) for tax and year end (YE) for audit and MBRS."],["Team","Team A, Team Tax, Team MBRS, -Nil-","Team","Captured","Some projects have no team (-Nil-)."],["Status","W.I.P, Open","Status","Captured","Completed, Cancelled and Rejected do not appear on this screen."],["HBy","1, 2, 3, 4","HBy","To confirm","Meaning not known (handled by, level, or a code). Shown as-is."],["-E-","Checkbox","-E-","To confirm","Probably the Project Ended control. Unchecked on every visible row."],["Not on this screen","","Assigned staff","Source needed","Find the assignment records."],["Not on this screen","","Schedule (due date)","Source needed","No due date column here. Check the project detail screen."],["Not on this screen","","Total hours","From new system","Summed from submitted timesheets."],["Not on this screen","","Hours vs estimate","Source needed","Estimate Hour is on the project detail screen. Confirm it is stored."],["Not on this screen","","Cost vs budget","Source needed","Estimate Time Cost, Estimate Expenses and Billing Amount are on the detail screen. Confirm meaning."]];
+const mapHtml=()=>`<div class="panel"><b>All 8 columns from the existing project grid are in the prototype.</b><div class="sub" style="margin-top:4px">5 more prototype columns are not on this screen and still need a source. Two existing columns (HBy and -E-) need their meaning confirmed.</div></div>
+<div class="tw"><table><thead><tr><th>Existing system column</th><th>Sample values</th><th>Prototype column</th><th>Status</th><th>Notes</th></tr></thead><tbody>${MAP.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td><span class="pill ${r[3]==="Captured"?"ok":r[3]==="To confirm"?"amb":"WIP"}">${r[3]}</span></td><td class="sub" style="white-space:normal;min-width:260px">${r[4]}</td></tr>`).join("")}</tbody></table></div>`;
+const ROLES=[["Leader / HOD","Hana Rahim"],["Manager","Marcus Tan"],["Admin","Siti Aminah"],["Staff","Priya K."]];
+let ri=0,ed=null,bq="";const can=()=>ri<3,cu=()=>`${ROLES[ri][1]} (${ROLES[ri][0]})`;
+const AUD=[{ts:"2026-10-06 14:22",who:"Marcus Tan (Manager)",id:"ADV-2026-011",act:"Updated limit",old:20000,nw:25000,note:"Scope extended"},{ts:"2026-10-02 09:15",who:"Hana Rahim (Leader / HOD)",id:"AUD-2026-014",act:"Set limit",old:null,nw:42000,note:""},{ts:"2026-09-28 16:40",who:"Siti Aminah (Admin)",id:"AUD-2026-030",act:"Set limit",old:null,nw:40000,note:"Per engagement letter"},{ts:"2026-09-20 11:05",who:"Siti Aminah (Admin)",id:"AUD-2026-021",act:"Set limit",old:null,nw:30000,note:""},{ts:"2026-09-15 10:30",who:"Marcus Tan (Manager)",id:"TAX-2026-007",act:"Updated limit",old:15000,nw:18000,note:"Additional schedules"},{ts:"2026-09-10 09:00",who:"Hana Rahim (Leader / HOD)",id:"AUD-2025-070",act:"Deleted limit",old:20000,nw:null,note:"Project cancelled"}];
+const pj0=id=>P.find(x=>x.id===id),lab0=id=>{const p=pj0(id);return`${p.cust.replace(" SDN. BHD.","").replace(" BERHAD","")} ${p.work} ${p.year}`};
+const lab=id=>{const p=pj0(id);return`${esc(p.cust)}<div class="sub">${p.ref} · ${p.work} · ${p.year}</div>`},mny=x=>x?rm(x):"None",tstr=t=>`${dt(t.slice(0,10))} ${t.slice(11)}`;
+const lastAud=id=>AUD.filter(a=>a.id===id)[0];
+function updWho(){$("wr").textContent=ROLES[ri][0];$("wn").textContent=ROLES[ri][1];$("wa").textContent=ROLES[ri][1].split(" ").map(w=>w[0]).join("")}
+function edPanel(){if(!ed)return"";const p=pj0(ed.id),d=F[ed.id],hd=`<div class="sub">${esc(p.cust)} · ${p.ref} · ${p.work} · ${p.year}. Cost to date ${rm(d.cost)}.</div>`;
+ if(ed.mode==="del")return`<div class="panel" id="edp"><b>Delete limit</b>${hd}<div class="sub">Current limit ${rm(d.bud)}. Without a limit the project shows no warnings until a new one is set.</div><div class="form"><label style="grid-column:span 2">Reason (optional)<input id="bnote"></label><button class="btn" id="bgo" style="background:#dc2626">Delete limit</button><button class="btn ghost" id="bno">Cancel</button></div></div>`;
+ return`<div class="panel" id="edp"><b>${d.bud?"Update":"Set"} limit</b>${hd}<div class="form"><label>Limit (RM)<input id="bval" type="number" min="1" step="100" value="${d.bud||""}"></label><label style="grid-column:span 2">Note (optional)<input id="bnote" placeholder="Reason for the change"></label><button class="btn" id="bgo">Save limit</button><button class="btn ghost" id="bno">Cancel</button></div></div>`}
+function budHtml(){
+ if(!can())return`<div class="panel"><b>Access restricted</b><p class="sub" style="margin-bottom:0">Only Leader / HOD, Manager and Admin roles can view or change budget limits. Use "View as" in the top bar to switch role.</p></div>`;
+ const act=P.filter(p=>!REC.includes(p.status)),wl=act.filter(p=>F[p.id].bud),t=bq.trim().toLowerCase();
+ const res=t?act.filter(p=>(p.ref+" "+p.cust+" "+p.work+" "+p.year).toLowerCase().includes(t)):act.filter(p=>!F[p.id].bud);
+ const bar=r=>`<b>${Math.round(r*100)}%</b><div class="meter ${r>=1?"bad":r>=.9?"amb":""}"><i style="width:${Math.min(100,r*100)}%"></i></div>`;
+ return`${edPanel()}
+<div class="sh"><h3>Active projects with a limit (${wl.length})</h3></div>
+<div class="tw"><table><thead><tr><th>Project</th><th>Status</th><th class="num">Cost to date</th><th class="num">Limit</th><th style="min-width:130px">Used</th><th>Last updated</th><th></th></tr></thead><tbody>${wl.map(p=>{const d=F[p.id],a=lastAud(p.id);return`<tr><td>${lab(p.id)}</td><td><span class="pill ${p.status}">${stl(p.status)}</span></td><td class="num">${rm(d.cost)}</td><td class="num"><b>${rm(d.bud)}</b></td><td>${bar(d.cost/d.bud)}${costBadge(p)}</td><td>${a?`${esc(a.who.split(" (")[0])}<div class="sub">${tstr(a.ts)}</div>`:'<span class="sub">No record</span>'}</td><td style="white-space:nowrap"><button class="btn ghost" data-bm="upd" data-bid="${p.id}">Update limit</button> <button class="link" style="color:#dc2626" data-bm="del" data-bid="${p.id}">Delete limit</button></td></tr>`}).join("")||'<tr><td colspan="7" class="sub">No active project has a limit yet.</td></tr>'}</tbody></table></div>
+<div class="sh" style="margin-top:24px"><h3>${t?"Search results":"Projects without a limit"} (${res.length})</h3><input id="bq" type="search" placeholder="Search customer, Ref No, work or year" value="${esc(bq)}" aria-label="Search projects" style="min-width:260px"></div>
+<div class="tw"><table><thead><tr><th>Project</th><th>Status</th><th class="num">Cost to date</th><th class="num">Current limit</th><th></th></tr></thead><tbody>${res.map(p=>{const d=F[p.id];return`<tr><td>${lab(p.id)}</td><td><span class="pill ${p.status}">${stl(p.status)}</span></td><td class="num">${rm(d.cost)}</td><td class="num">${mny(d.bud)}</td><td style="text-align:right"><button class="btn ghost" data-bm="set" data-bid="${p.id}">${d.bud?"Update limit":"Set limit"}</button></td></tr>`}).join("")||'<tr><td colspan="5" class="sub">No matching active project.</td></tr>'}</tbody></table></div>
+<div class="sh" style="margin-top:24px"><h3>Audit trail (${AUD.length})</h3></div>
+<div class="tw"><table><thead><tr><th>Date and time</th><th>Project</th><th>Action</th><th class="num">Previous limit</th><th class="num">New limit</th><th>Updated by</th><th>Note</th></tr></thead><tbody>${AUD.slice(0,15).map(a=>`<tr><td style="white-space:nowrap">${tstr(a.ts)}</td><td>${lab(a.id)}</td><td><span class="pill ${a.act[0]==="S"?"ok":a.act[0]==="U"?"WIP":"bad"}">${a.act}</span></td><td class="num">${mny(a.old)}</td><td class="num">${mny(a.nw)}</td><td>${esc(a.who)}</td><td class="sub" style="white-space:normal">${esc(a.note)||"—"}</td></tr>`).join("")}</tbody></table></div>`}
+function wireBud(){
+ document.querySelectorAll("[data-bm]").forEach(b=>b.onclick=()=>{ed={id:b.dataset.bid,mode:b.dataset.bm};renderL()});
+ if($("bq"))$("bq").oninput=e=>{bq=e.target.value;const pos=e.target.selectionStart;renderL();$("bq").focus();$("bq").setSelectionRange(pos,pos)};
+ if($("bno"))$("bno").onclick=()=>{ed=null;renderL()};
+ if($("bgo"))$("bgo").onclick=()=>{if(!can())return;const d=F[ed.id],note=$("bnote").value.trim(),del=ed.mode==="del";let v=null;
+  if(!del){v=Math.round(+$("bval").value);if(!(v>0)){toast("Enter a limit above RM 0");return}}
+  AUD.unshift({ts:TODAY+" "+new Date().toTimeString().slice(0,5),who:cu(),id:ed.id,act:del?"Deleted limit":d.bud?"Updated limit":"Set limit",old:d.bud||null,nw:v,note});
+  d.bud=v;toast(del?"Limit deleted":v<d.cost?"Limit saved. It is below the cost to date, so the project shows as limit reached":"Limit saved");ed=null;renderL()};
+ const e=$("edp");if(e)e.scrollIntoView({block:"nearest"})}
+$("role").onchange=e=>{ri=+e.target.value;ed=null;updWho();go(pg)};
+const dashHtml=()=>{const act=P.filter(p=>!REC.includes(p.status)),rec=P.filter(p=>REC.includes(p.status)).sort((a,b)=>(F[b.id].done||F[b.id].due).localeCompare(F[a.id].done||F[a.id].due)).slice(0,10);
+return`<div style="margin-bottom:16px"><h2 style="margin:0;font-size:26px">Welcome back</h2><div class="sub">${dt(TODAY)} · Here is what needs your attention</div></div>${attnHtml()}
+<div class="sh"><h3>Active / Ongoing (${act.length})</h3><span>${att?'<button class="link" data-clr style="margin-right:14px">Clear filter</button>':""}<button class="link" data-gl="active">View all</button></span></div>${listHtml(vis(act))}
+<div class="sh" style="margin-top:24px"><h3>Recent: completed, cancelled, rejected</h3><button class="link" data-gl="recent">View all</button></div>${listHtml(rec)}`};
+const ACTF=()=>[...AUD.map(a=>["g",`${a.who.split(" (")[0]} ${a.act.toLowerCase()}`,lab0(a.id)+(a.nw?` → ${rm(a.nw)}`:""),a.ts.slice(0,10)]),...Object.entries(SUB).map(([u,at])=>["b",`${u} submitted a timesheet`,`${f(TS[u][1])} h for 5–18 Oct`,at.slice(0,10)]),...P.filter(p=>!REC.includes(p.status)).flatMap(p=>[...(sched(p)[0]==="Delayed"?[["r",`${p.cust} is delayed`,`${p.ref} ${p.work} ${p.year} · due ${dt(F[p.id].due)}`,F[p.id].due]]:[]),...(F[p.id].bud&&F[p.id].cost>=F[p.id].bud?[["a",`${p.cust} reached its cost limit`,`${rm(F[p.id].cost)} of ${rm(F[p.id].bud)}`,TODAY]]:[])])].sort((a,b)=>b[3].localeCompare(a[3]));
+function drawRP(){const on=vw==="cal"&&!sel&&pg!=="staff",el=$("rp");el.classList.toggle("hide",!on);if(!on)return;
+ const iso=d=>`2026-10-${String(d).padStart(2,"0")}`,act=P.filter(p=>!REC.includes(p.status)),st=new Date(2026,9,1).getDay();
+ const cells=[...Array(st).fill(0),...Array.from({length:31},(_,i)=>i+1)];
+ const dot=d=>{const l=act.filter(p=>F[p.id].due===iso(d));return l.length?`<i class="${l.some(p=>sched(p)[0]==="Delayed")?"r":""}" title="${esc(l.map(p=>p.id).join(", "))}"></i>`:""};
+ const soon=act.filter(p=>F[p.id].due>=TODAY&&F[p.id].due<="2026-10-22").sort((a,b)=>F[a.id].due.localeCompare(F[b.id].due));
+ el.innerHTML=`<div><h4>Due in the next 14 days</h4><div class="results" style="margin:0">${soon.map(p=>`<button class="res" data-rid="${p.id}"><span><b>${esc(p.cust)}</b><div class="sub">${p.ref} · ${p.work} ${p.year}</div></span><span class="sub">${dt(F[p.id].due).replace(/ 20\d\d/,"")}</span></button>`).join("")||'<div class="sub">Nothing due.</div>'}</div></div>
+ <div><h4>Activity log</h4><div class="results" style="margin:0">${ACTF().map(([c,t,x,d])=>`<div class="act ${c==="b"?"":c}"><div><b>${t}</b><span class="sub">${dt(d).replace(/ 20\d\d/,"")}</span></div><div class="sub">${x}</div></div>`).join("")}</div></div>`;
+ el.querySelectorAll("[data-rid]").forEach(b=>b.onclick=()=>{sel=b.dataset.rid;renderL()})}
+$("hb").onclick=()=>$("sb").classList.toggle("hid");if(innerWidth<860)$("sb").classList.add("hid");
+$("bell").onclick=()=>go("dash");
+$("gs").oninput=e=>{q=e.target.value;["list","board","cal"].includes(pg)?renderL():go("list")};
+renderSide();go("dash");
+</script></body></html>

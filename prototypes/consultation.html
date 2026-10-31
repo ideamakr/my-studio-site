@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Osteocare Malaysia Clinic Management System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fdf2f2',
+                            100: '#fde8e8',
+                            500: '#e31b23',
+                            600: '#c5141c',
+                            700: '#a30f16',
+                            800: '#851015',
+                            900: '#6f1317',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #fcfcfc;
+            color: #111111;
+        }
+        /* Advanced Light Glassmorphism with Red/White/Black Brand Identity */
+        .mesh-bg {
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(227, 27, 35, 0.06) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(17, 17, 17, 0.04) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(227, 27, 35, 0.03) 0px, transparent 50%),
+                linear-gradient(to bottom right, #ffffff, #f7f7f7);
+            background-attachment: fixed;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(229, 231, 235, 0.9);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+        .glass-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(229, 231, 235, 0.9);
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
+        }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(229, 231, 235, 0.9);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        .glass-modal {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(229, 231, 235, 0.95);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(243, 244, 246, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(227, 27, 35, 0.3); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(227, 27, 35, 0.6); }
+    </style>
+</head>
+<body class="mesh-bg h-full flex flex-col overflow-hidden">
+
+    <!-- Top Header Bar -->
+    <header class="glass-header h-16 flex items-center justify-between px-6 shrink-0 z-20">
+        <div class="flex items-center space-x-3">
+            <div class="bg-gradient-to-tr from-brand-600 to-brand-500 text-white p-2.5 rounded-2xl shadow-lg shadow-brand-500/20">
+                <i class="fa-solid fa-stethoscope text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-base md:text-lg text-black tracking-tight">OSTEOC<span class="text-brand-600">ARE</span> Malaysia Clinic System</h1>
+                <p class="text-[11px] text-neutral-500 font-medium">Enterprise Healthcare & Multi-Branch Administration (PDPA Aligned)</p>
+            </div>
+        </div>
+
+        <!-- Role Switcher & User Profile -->
+        <div class="flex items-center space-x-4">
+            <div class="hidden md:flex items-center space-x-2 bg-neutral-100/90 px-3.5 py-1.5 rounded-2xl border border-neutral-200 shadow-inner">
+                <span class="text-[10px] font-bold text-brand-600 uppercase tracking-wider">Active Role:</span>
+                <select id="roleSwitcher" class="bg-transparent text-xs font-semibold text-black focus:outline-none cursor-pointer">
+                    <option value="Super Admin" class="bg-white text-black">Super Admin (Full Access)</option>
+                    <option value="Branch Manager" class="bg-white text-black">Branch Manager (Mont Kiara)</option>
+                    <option value="Receptionist" class="bg-white text-black">Receptionist (Front Desk)</option>
+                    <option value="Practitioner" class="bg-white text-black">Sifu / Practitioner (Tablet View)</option>
+                    <option value="Management" class="bg-white text-black">Management (Consolidated View)</option>
+                </select>
+            </div>
+
+            <div class="flex items-center space-x-3 border-l pl-4 border-neutral-200">
+                <div class="text-right hidden sm:block">
+                    <p id="userNameDisplay" class="text-xs font-bold text-black">Datuk Dr. Ahmad (Super Admin)</p>
+                    <p id="userBranchDisplay" class="text-[10px] text-brand-600 font-semibold">Bangsar Flagship Branch</p>
+                </div>
+                <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-500 text-white flex items-center justify-center font-extrabold text-xs shadow-md shadow-brand-500/20 border border-brand-300/40">
+                    AD
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main App Layout -->
+    <div class="flex flex-1 overflow-hidden">
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 glass-sidebar text-neutral-700 flex flex-col justify-between shrink-0">
+            <div class="p-4 space-y-1.5">
+                <p class="px-3 text-[10px] font-extrabold uppercase tracking-widest text-brand-600 mb-3">Core Modules</p>
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-3 rounded-2xl text-sm font-semibold transition-all bg-gradient-to-r from-brand-600 to-brand-700 text-white shadow-lg shadow-brand-600/25 border border-brand-500/30">
+                    <i class="fa-solid fa-chart-pie w-5 text-brand-100"></i>
+                    <span>Dashboard & Reporting</span>
+                </button>
+                <button onclick="switchTab('queue')" id="nav-queue" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-3 rounded-2xl text-sm font-medium transition-all hover:bg-neutral-100 hover:text-black border border-transparent">
+                    <i class="fa-solid fa-list-ol w-5 text-neutral-400"></i>
+                    <span>Consultation Queue</span>
+                </button>
+                <button onclick="switchTab('appointments')" id="nav-appointments" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-3 rounded-2xl text-sm font-medium transition-all hover:bg-neutral-100 hover:text-black border border-transparent">
+                    <i class="fa-solid fa-calendar-days w-5 text-neutral-400"></i>
+                    <span>Appointment & Schedule</span>
+                </button>
+                <button onclick="switchTab('patients')" id="nav-patients" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-3 rounded-2xl text-sm font-medium transition-all hover:bg-neutral-100 hover:text-black border border-transparent">
+                    <i class="fa-solid fa-user-injured w-5 text-neutral-400"></i>
+                    <span>Patient & Treatments</span>
+                </button>
+                <button onclick="switchTab('branches')" id="nav-branches" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-3 rounded-2xl text-sm font-medium transition-all hover:bg-neutral-100 hover:text-black border border-transparent">
+                    <i class="fa-solid fa-hospital w-5 text-neutral-400"></i>
+                    <span>Branches & Admin</span>
+                </button>
+                <button onclick="switchTab('audit')" id="nav-audit" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-3 rounded-2xl text-sm font-medium transition-all hover:bg-neutral-100 hover:text-black border border-transparent">
+                    <i class="fa-solid fa-shield-halved w-5 text-neutral-400"></i>
+                    <span>Security & Audit Logs</span>
+                </button>
+            </div>
+
+            <!-- System Info Footer -->
+            <div class="p-4 bg-neutral-50/80 border-t border-neutral-200/80 text-xs space-y-2">
+                <div class="flex justify-between items-center text-neutral-500">
+                    <span>System Status:</span>
+                    <span class="flex items-center text-brand-600 font-semibold"><span class="w-2 h-2 rounded-full bg-brand-500 mr-1.5 animate-pulse"></span>Encrypted & Online</span>
+                </div>
+                <div class="flex justify-between items-center text-neutral-500">
+                    <span>PDPA Compliance:</span>
+                    <span class="text-black font-medium">Strict (MY)</span>
+                </div>
+                <div class="pt-2 border-t border-neutral-200 text-[11px] text-neutral-400 text-center font-mono">
+                    Osteocare v2.9 • Comprehensive History
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto p-8 relative">
+
+            <!-- TAB 1: DASHBOARD & REPORTING -->
+            <section id="tab-dashboard" class="tab-content space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-black tracking-tight">Executive Dashboard & Operations</h2>
+                        <p class="text-sm text-neutral-500">Real-time cross-branch analytics for Bangsar, Mont Kiara, and Petaling Jaya.</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <select id="dashBranchFilter" onchange="updateDashboardMetrics()" class="glass-panel bg-white/90 border border-neutral-200 text-sm rounded-2xl px-3.5 py-2 font-semibold text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            <option value="All">All Branches (Consolidated)</option>
+                            <option value="Bangsar">Bangsar Flagship</option>
+                            <option value="Mont Kiara">Mont Kiara Branch</option>
+                            <option value="PJ Branch">Petaling Jaya (PJ)</option>
+                        </select>
+                        <button onclick="showNotification('Executive report successfully compiled and exported as PDF.')" class="bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white px-4 py-2 rounded-2xl text-sm font-semibold shadow-md shadow-brand-500/20 flex items-center space-x-2 transition-all">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Export Report</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-brand-400 transition-all">
+                        <div>
+                            <p class="text-xs font-extrabold uppercase tracking-wider text-brand-600">Total Active Patients</p>
+                            <h3 id="kpiTotalPatients" class="text-3xl font-extrabold text-black mt-1">5,420</h3>
+                            <p class="text-xs text-brand-700 font-semibold mt-2 flex items-center"><i class="fa-solid fa-arrow-trend-up mr-1"></i> +142 this month</p>
+                        </div>
+                        <div class="w-12 h-12 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center text-xl shadow-sm mt-4 border border-brand-200">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-black/30 transition-all">
+                        <div>
+                            <p class="text-xs font-extrabold uppercase tracking-wider text-neutral-600">Today's Queue Entries</p>
+                            <h3 id="kpiTodayQueue" class="text-3xl font-extrabold text-black mt-1">18</h3>
+                            <p class="text-xs text-neutral-600 font-semibold mt-2 flex items-center"><i class="fa-solid fa-circle-check mr-1"></i> 12 Completed / 6 Follow-up</p>
+                        </div>
+                        <div class="w-12 h-12 bg-neutral-100 text-black rounded-2xl flex items-center justify-center text-xl shadow-sm mt-4 border border-neutral-300">
+                            <i class="fa-solid fa-list-ol"></i>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-brand-400 transition-all">
+                        <div>
+                            <p class="text-xs font-extrabold uppercase tracking-wider text-brand-600">Active Branches</p>
+                            <h3 id="kpiBranches" class="text-3xl font-extrabold text-black mt-1">3</h3>
+                            <p class="text-xs text-neutral-600 font-medium mt-2">Bangsar, Mont Kiara & PJ</p>
+                        </div>
+                        <div class="w-12 h-12 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center text-xl shadow-sm mt-4 border border-brand-200">
+                            <i class="fa-solid fa-hospital-user"></i>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:border-brand-400 transition-all">
+                        <div>
+                            <p class="text-xs font-extrabold uppercase tracking-wider text-brand-600">Monthly Revenue (MYR)</p>
+                            <h3 id="kpiRevenue" class="text-3xl font-extrabold text-black mt-1">RM 168,900</h3>
+                            <p class="text-xs text-brand-700 font-semibold mt-2 flex items-center"><i class="fa-solid fa-arrow-trend-up mr-1"></i> +11.2% vs last month</p>
+                        </div>
+                        <div class="w-12 h-12 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center text-xl shadow-sm mt-4 border border-brand-200">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Branch Performance Summary -->
+                <div class="glass-panel p-6 rounded-3xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-black text-lg">Branch Performance & Consultation Flow</h3>
+                        <span class="text-xs bg-neutral-100 text-brand-700 px-3 py-1 rounded-full font-semibold border border-neutral-200">Real-time metrics</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-neutral-50 text-neutral-500 uppercase text-[10px] tracking-wider border-b border-neutral-200">
+                                <tr>
+                                    <th class="py-3.5 px-4">Branch Name</th>
+                                    <th class="py-3.5 px-4">Practitioners / Sifu</th>
+                                    <th class="py-3.5 px-4">Waiting Queue</th>
+                                    <th class="py-3.5 px-4">Awaiting Admin Follow-Up</th>
+                                    <th class="py-3.5 px-4">Utilization</th>
+                                    <th class="py-3.5 px-4">Revenue (MYR)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-neutral-100 font-medium text-neutral-800">
+                                <tr class="hover:bg-neutral-50/80 transition-colors">
+                                    <td class="py-4 px-4 font-bold text-black">Bangsar Flagship</td>
+                                    <td class="py-4 px-4">Sifu Ahmad & Dr. Sarah</td>
+                                    <td class="py-4 px-4"><span class="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-bold">3 Patients</span></td>
+                                    <td class="py-4 px-4"><span class="bg-brand-50 text-brand-700 border border-brand-200 px-3 py-1 rounded-full text-xs font-bold">4 Pending</span></td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-24 bg-neutral-200 h-2 rounded-full overflow-hidden">
+                                                <div class="bg-gradient-to-r from-brand-600 to-brand-500 h-full w-[90%]"></div>
+                                            </div>
+                                            <span class="text-xs font-bold text-black">90%</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 font-bold text-black">RM 74,500</td>
+                                </tr>
+                                <tr class="hover:bg-neutral-50/80 transition-colors">
+                                    <td class="py-4 px-4 font-bold text-black">Mont Kiara Branch</td>
+                                    <td class="py-4 px-4">Dr. Marcus Lee</td>
+                                    <td class="py-4 px-4"><span class="bg-neutral-100 text-neutral-700 border border-neutral-200 px-3 py-1 rounded-full text-xs font-bold">1 Patient</span></td>
+                                    <td class="py-4 px-4"><span class="bg-brand-50 text-brand-700 border border-brand-200 px-3 py-1 rounded-full text-xs font-bold">2 Pending</span></td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-24 bg-neutral-200 h-2 rounded-full overflow-hidden">
+                                                <div class="bg-gradient-to-r from-brand-600 to-brand-500 h-full w-[78%]"></div>
+                                            </div>
+                                            <span class="text-xs font-bold text-black">78%</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 font-bold text-black">RM 56,200</td>
+                                </tr>
+                                <tr class="hover:bg-neutral-50/80 transition-colors">
+                                    <td class="py-4 px-4 font-bold text-black">Petaling Jaya (PJ)</td>
+                                    <td class="py-4 px-4">Dr. Siti Aminah</td>
+                                    <td class="py-4 px-4"><span class="bg-neutral-100 text-neutral-700 border border-neutral-200 px-3 py-1 rounded-full text-xs font-bold">0 Patients</span></td>
+                                    <td class="py-4 px-4"><span class="bg-brand-50 text-brand-700 border border-brand-200 px-3 py-1 rounded-full text-xs font-bold">1 Pending</span></td>
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-24 bg-neutral-200 h-2 rounded-full overflow-hidden">
+                                                <div class="bg-gradient-to-r from-brand-600 to-brand-500 h-full w-[65%]"></div>
+                                            </div>
+                                            <span class="text-xs font-bold text-black">65%</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 font-bold text-black">RM 38,200</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: CONSULTATION QUEUE & ADMIN FOLLOW-UP (FR-04a) -->
+            <section id="tab-queue" class="tab-content hidden space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-black tracking-tight">Consultation Queue & Admin Follow-Up</h2>
+                        <p class="text-sm text-neutral-500">Daily waiting queue, tablet-based Sifu findings, body-area selections, session history, and admin follow-up workflows.</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="openQRPortalModal()" class="glass-panel bg-white/90 border border-neutral-200 text-neutral-800 font-semibold px-4 py-3 rounded-2xl text-sm shadow-sm hover:bg-white transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-qrcode text-brand-600"></i>
+                            <span>Patient QR Check-In Kiosk</span>
+                        </button>
+                        <button onclick="openIssueQueueModal()" class="bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white font-bold px-5 py-3 rounded-2xl text-sm shadow-lg shadow-brand-500/25 transition-all flex items-center space-x-2 border border-brand-400/40">
+                            <i class="fa-solid fa-ticket"></i>
+                            <span>Issue Queue Number</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Queue Status Filter Bar -->
+                <div class="glass-panel p-4 rounded-3xl flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <button onclick="filterQueueStatus('All')" id="qfilter-All" class="qfilter-btn px-4 py-2 rounded-2xl text-xs font-bold bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-md shadow-brand-500/20 transition-all">All Active</button>
+                        <button onclick="filterQueueStatus('Waiting')" id="qfilter-Waiting" class="qfilter-btn px-4 py-2 rounded-2xl text-xs font-bold bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border border-neutral-200 transition-all">Waiting (3)</button>
+                        <button onclick="filterQueueStatus('In Consultation')" id="qfilter-In Consultation" class="qfilter-btn px-4 py-2 rounded-2xl text-xs font-bold bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border border-neutral-200 transition-all">In Consultation (1)</button>
+                        <button onclick="filterQueueStatus('Awaiting Admin Follow-up')" id="qfilter-Awaiting Admin Follow-up" class="qfilter-btn px-4 py-2 rounded-2xl text-xs font-bold bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border border-neutral-200 transition-all">Awaiting Follow-up (3)</button>
+                        <button onclick="filterQueueStatus('Booked / Closed')" id="qfilter-Booked / Closed" class="qfilter-btn px-4 py-2 rounded-2xl text-xs font-bold bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border border-neutral-200 transition-all">Booked & Closed</button>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="searchQueueInput" onkeyup="renderQueueTable()" placeholder="Search patient or queue #..." class="bg-white/90 border border-neutral-200 text-xs rounded-2xl pl-10 pr-4 py-2.5 w-64 text-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner">
+                        <i class="fa-solid fa-search absolute left-3.5 top-3 text-neutral-400 text-xs"></i>
+                    </div>
+                </div>
+
+                <!-- Consultation Queue Table -->
+                <div class="glass-panel rounded-3xl overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-neutral-50 text-neutral-500 uppercase text-[10px] tracking-wider border-b border-neutral-200">
+                            <tr>
+                                <th class="py-4 px-4">Queue #</th>
+                                <th class="py-4 px-4">Patient Name</th>
+                                <th class="py-4 px-4">Branch</th>
+                                <th class="py-4 px-4">Selected Body Areas</th>
+                                <th class="py-4 px-4">Queue Status</th>
+                                <th class="py-4 px-4">Admin Follow-Up Outcome</th>
+                                <th class="py-4 px-4 text-right">Actions / View History</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queueTableBody" class="divide-y divide-neutral-100 text-neutral-800 font-medium">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB 3: APPOINTMENT & SCHEDULING MANAGEMENT -->
+            <section id="tab-appointments" class="tab-content hidden space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-black tracking-tight">Appointment & Scheduling Management</h2>
+                        <p class="text-sm text-neutral-500">Manage follow-up bookings across branches, practitioners, and treatment timelines with conflict checks.</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="openCommsLogModal()" class="glass-panel bg-white/90 border border-neutral-200 text-neutral-800 font-semibold px-4 py-3 rounded-2xl text-sm shadow-sm hover:bg-white transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-comments text-brand-600"></i>
+                            <span>WhatsApp / SMS Comms Log</span>
+                        </button>
+                        <button onclick="openBookingModal()" class="bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white font-bold px-5 py-3 rounded-2xl text-sm shadow-lg shadow-brand-500/25 transition-all flex items-center space-x-2 border border-brand-400/40">
+                            <i class="fa-solid fa-calendar-plus"></i>
+                            <span>New Appointment</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters & Controls Bar -->
+                <div class="glass-panel p-4 rounded-3xl flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex flex-wrap gap-3 items-center">
+                        <div>
+                            <label class="block text-[10px] font-bold text-brand-600 uppercase">Branch</label>
+                            <select id="filterBranch" onchange="filterAppointments()" class="bg-white/90 border border-neutral-200 rounded-2xl text-xs px-3.5 py-2 font-semibold text-black mt-1 shadow-inner">
+                                <option value="All">All Branches</option>
+                                <option value="Bangsar">Bangsar Flagship</option>
+                                <option value="Mont Kiara">Mont Kiara</option>
+                                <option value="PJ Branch">Petaling Jaya</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-brand-600 uppercase">Practitioner</label>
+                            <select id="filterPractitioner" onchange="filterAppointments()" class="bg-white/90 border border-neutral-200 rounded-2xl text-xs px-3.5 py-2 font-semibold text-black mt-1 shadow-inner">
+                                <option value="All">All Practitioners</option>
+                                <option value="Sifu Ahmad">Sifu Ahmad</option>
+                                <option value="Dr. Sarah Tan">Dr. Sarah Tan</option>
+                                <option value="Dr. Marcus Lee">Dr. Marcus Lee</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-brand-600 uppercase">Status</label>
+                            <select id="filterStatus" onchange="filterAppointments()" class="bg-white/90 border border-neutral-200 rounded-2xl text-xs px-3.5 py-2 font-semibold text-black mt-1 shadow-inner">
+                                <option value="All">All Statuses</option>
+                                <option value="Confirmed">Confirmed</option>
+                                <option value="Checked-in">Checked-in</option>
+                                <option value="In Treatment">In Treatment</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="searchAppointmentInput" onkeyup="filterAppointments()" placeholder="Search patient or treatment..." class="bg-white/90 border border-neutral-200 text-xs rounded-2xl pl-10 pr-4 py-2.5 w-64 text-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner">
+                        <i class="fa-solid fa-search absolute left-3.5 top-3 text-neutral-400 text-xs"></i>
+                    </div>
+                </div>
+
+                <!-- Appointments Table -->
+                <div class="glass-panel rounded-3xl overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-neutral-50 text-neutral-500 uppercase text-[10px] tracking-wider border-b border-neutral-200">
+                            <tr>
+                                <th class="py-4 px-4">Time & Date</th>
+                                <th class="py-4 px-4">Patient Name</th>
+                                <th class="py-4 px-4">Treatment Type</th>
+                                <th class="py-4 px-4">Branch</th>
+                                <th class="py-4 px-4">Practitioner</th>
+                                <th class="py-4 px-4">Status</th>
+                                <th class="py-4 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appointmentsTableBody" class="divide-y divide-neutral-100 text-neutral-800 font-medium">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB 4: PATIENT & TREATMENT MANAGEMENT -->
+            <section id="tab-patients" class="tab-content hidden space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-black tracking-tight">Patient & Treatment Management</h2>
+                        <p class="text-sm text-neutral-500">Maintain secure patient profiles, visit history, and clinical assessment records with duplicate checks.</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="openPainHeatmapModal()" class="glass-panel bg-white/90 border border-neutral-200 text-neutral-800 font-semibold px-4 py-3 rounded-2xl text-sm shadow-sm hover:bg-white transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-fire text-brand-600"></i>
+                            <span>Pain Heatmap Summary</span>
+                        </button>
+                        <button onclick="openNewPatientModal()" class="bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white font-bold px-5 py-3 rounded-2xl text-sm shadow-lg shadow-brand-500/25 transition-all flex items-center space-x-2 border border-brand-400/40">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span>Register New Patient</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search & Filters -->
+                <div class="glass-panel p-4 rounded-3xl flex items-center justify-between">
+                    <div class="relative w-96">
+                        <input type="text" id="patientSearchInput" onkeyup="filterPatients()" placeholder="Search by name, NRIC / Passport, or phone..." class="bg-white/90 border border-neutral-200 text-xs rounded-2xl pl-10 pr-4 py-3 w-full text-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner">
+                        <i class="fa-solid fa-search absolute left-3.5 top-3.5 text-neutral-400 text-xs"></i>
+                    </div>
+                    <div class="text-xs text-neutral-500 font-medium">
+                        Showing <span id="patientCountDisplay" class="font-bold text-brand-600">5</span> registered patients
+                    </div>
+                </div>
+
+                <!-- Patient Cards / Table List -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="patientCardGrid">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </section>
+
+            <!-- TAB 5: MULTI-BRANCH & ROLE ADMINISTRATION -->
+            <section id="tab-branches" class="tab-content hidden space-y-6">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-black tracking-tight">Multi-Branch & Role Administration</h2>
+                    <p class="text-sm text-neutral-500">Configure clinic locations, practitioner allocations, and role-based permissions matrix.</p>
+                </div>
+
+                <!-- Branches Management Grid -->
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-black text-lg">Branch Locations</h3>
+                        <button onclick="showNotification('New branch registration wizard initiated.')" class="text-xs bg-brand-50 text-brand-700 font-semibold px-4 py-2 rounded-2xl border border-brand-200 hover:bg-brand-100 transition-all shadow-sm">
+                            + Add Branch
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="glass-panel p-6 rounded-3xl space-y-3 hover:border-brand-400 transition-all">
+                            <div class="flex justify-between items-start">
+                                <div class="bg-brand-50 text-brand-600 p-3 rounded-2xl shadow-sm border border-brand-200">
+                                    <i class="fa-solid fa-hospital text-xl"></i>
+                                </div>
+                                <span class="text-xs bg-black text-white font-bold px-3 py-1 rounded-full">Flagship</span>
+                            </div>
+                            <h4 class="font-bold text-black text-base">Bangsar Flagship Branch</h4>
+                            <p class="text-xs text-neutral-500">No. 22, Jalan Telawi 3, Bangsar Baru, 59100 Kuala Lumpur.</p>
+                            <div class="pt-3 border-t border-neutral-100 flex justify-between text-xs font-medium text-neutral-500">
+                                <span>Staff: 14 members</span>
+                                <span class="text-brand-600 font-semibold cursor-pointer hover:underline" onclick="showNotification('Opening Bangsar Branch Settings...')">Configure</span>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel p-6 rounded-3xl space-y-3 hover:border-brand-400 transition-all">
+                            <div class="flex justify-between items-start">
+                                <div class="bg-brand-50 text-brand-600 p-3 rounded-2xl shadow-sm border border-brand-200">
+                                    <i class="fa-solid fa-hospital text-xl"></i>
+                                </div>
+                                <span class="text-xs bg-neutral-100 text-neutral-800 font-bold px-3 py-1 rounded-full border border-neutral-200">Active</span>
+                            </div>
+                            <h4 class="font-bold text-black text-base">Mont Kiara Branch</h4>
+                            <p class="text-xs text-neutral-500">Unit 1-05, 1 Mont Kiara, 1 Jalan Kiara, 50480 Kuala Lumpur.</p>
+                            <div class="pt-3 border-t border-neutral-100 flex justify-between text-xs font-medium text-neutral-500">
+                                <span>Staff: 10 members</span>
+                                <span class="text-brand-600 font-semibold cursor-pointer hover:underline" onclick="showNotification('Opening Mont Kiara Branch Settings...')">Configure</span>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel p-6 rounded-3xl space-y-3 hover:border-brand-400 transition-all">
+                            <div class="flex justify-between items-start">
+                                <div class="bg-brand-50 text-brand-600 p-3 rounded-2xl shadow-sm border border-brand-200">
+                                    <i class="fa-solid fa-hospital text-xl"></i>
+                                </div>
+                                <span class="text-xs bg-neutral-100 text-neutral-800 font-bold px-3 py-1 rounded-full border border-neutral-200">Active</span>
+                            </div>
+                            <h4 class="font-bold text-black text-base">Petaling Jaya (PJ) Branch</h4>
+                            <p class="text-xs text-neutral-500">Suite 12-B, Tropicana Avenue, Persiaran Tropicana, 47410 PJ.</p>
+                            <div class="pt-3 border-t border-neutral-100 flex justify-between text-xs font-medium text-neutral-500">
+                                <span>Staff: 8 members</span>
+                                <span class="text-brand-600 font-semibold cursor-pointer hover:underline" onclick="showNotification('Opening PJ Branch Settings...')">Configure</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role & Permissions Matrix -->
+                <div class="glass-panel p-6 rounded-3xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-black text-lg">Role-Based Access Control (RBAC) Matrix</h3>
+                            <p class="text-xs text-neutral-500">Aligned with least-privilege security principles and Malaysian PDPA standards.</p>
+                        </div>
+                        <button onclick="showNotification('Permission matrix updated successfully.')" class="bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white text-xs px-4 py-2.5 rounded-2xl font-bold shadow-md shadow-brand-500/20 transition-all">Save Changes</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-neutral-50 text-neutral-500 uppercase tracking-wider border-b border-neutral-200">
+                                <tr>
+                                    <th class="py-3.5 px-4">Role Title</th>
+                                    <th class="py-3.5 px-4">Main Responsibilities</th>
+                                    <th class="py-3.5 px-4 text-center">Patient Records</th>
+                                    <th class="py-3.5 px-4 text-center">Consultation Queue</th>
+                                    <th class="py-3.5 px-4 text-center">Appointments</th>
+                                    <th class="py-3.5 px-4 text-center">Branch Settings</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-neutral-100 text-neutral-800 font-medium">
+                                <tr class="hover:bg-neutral-50/80 transition-colors">
+                                    <td class="py-4 px-4 font-bold text-black">Super Admin</td>
+                                    <td class="py-4 px-4 text-neutral-500">Manage all branches, system settings, roles & permissions.</td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i></td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i></td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i></td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i></td>
+                                </tr>
+                                <tr class="hover:bg-neutral-50/80 transition-colors">
+                                    <td class="py-4 px-4 font-bold text-black">Branch Manager</td>
+                                    <td class="py-4 px-4 text-neutral-500">Manage branch operations, practitioners, and branch reports.</td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i></td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i></td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i></td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i> (Branch)</td>
+                                </tr>
+                                <tr class="hover:bg-neutral-50/80 transition-colors">
+                                    <td class="py-4 px-4 font-bold text-black">Receptionist / Admin</td>
+                                    <td class="py-4 px-4 text-neutral-500">Register patients, issue queue numbers, handle admin follow-ups.</td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i> (Basic)</td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i> (Follow-up)</td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i></td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-xmark text-neutral-300"></i></td>
+                                </tr>
+                                <tr class="hover:bg-neutral-50/80 transition-colors">
+                                    <td class="py-4 px-4 font-bold text-black">Sifu / Practitioner</td>
+                                    <td class="py-4 px-4 text-neutral-500">Open consultations on tablet, select body areas and record findings.</td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i> (Assigned)</td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i> (Tablet View)</td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-check text-brand-600 font-bold"></i></td>
+                                    <td class="py-4 px-4 text-center"><i class="fa-solid fa-xmark text-neutral-300"></i></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: SECURITY & AUDIT LOGS -->
+            <section id="tab-audit" class="tab-content hidden space-y-6">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-black tracking-tight">Security & Audit Trails</h2>
+                    <p class="text-sm text-neutral-500">Immutable chronological audit logging of all sensitive data access, record modifications, and role changes.</p>
+                </div>
+
+                <div class="glass-panel p-6 rounded-3xl space-y-4">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="relative w-80">
+                            <input type="text" id="auditSearchInput" onkeyup="filterAuditLogs()" placeholder="Search audit logs by user or action..." class="bg-white/90 border border-neutral-200 text-xs rounded-2xl pl-10 pr-4 py-2.5 w-full text-black placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner">
+                            <i class="fa-solid fa-search absolute left-3.5 top-3 text-neutral-400 text-xs"></i>
+                        </div>
+                        <button onclick="showNotification('Audit log verification checksum verified: PASS (SHA-256 Validated).')" class="glass-panel bg-white/90 border border-neutral-200 text-neutral-800 text-xs px-4 py-2.5 rounded-2xl font-semibold hover:bg-white flex items-center space-x-2 transition-all shadow-sm">
+                            <i class="fa-solid fa-shield-check text-brand-600 text-sm"></i>
+                            <span>Verify Ledger Integrity</span>
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-neutral-50 text-neutral-500 uppercase tracking-wider border-b border-neutral-200">
+                                <tr>
+                                    <th class="py-3.5 px-4">Timestamp (MYT)</th>
+                                    <th class="py-3.5 px-4">User</th>
+                                    <th class="py-3.5 px-4">Role</th>
+                                    <th class="py-3.5 px-4">Branch</th>
+                                    <th class="py-3.5 px-4">Action Event</th>
+                                    <th class="py-3.5 px-4">IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditTableBody" class="divide-y divide-neutral-100 text-neutral-800 font-medium">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODAL CONTAINER -->
+    <div id="appModal" class="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
+        <div id="modalContentBox" class="glass-modal rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
+            <!-- Modal Header -->
+            <div class="bg-neutral-50 text-black px-6 py-4 flex items-center justify-between border-b border-neutral-200">
+                <h3 id="modalTitle" class="font-bold text-base text-black">Modal Title</h3>
+                <button onclick="closeModal()" class="text-neutral-400 hover:text-black text-lg transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <div id="modalBody" class="p-6 max-h-[80vh] overflow-y-auto space-y-4 text-neutral-800">
+                <!-- Dynamically injected form/content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Banner -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 bg-black text-white text-xs px-5 py-4 rounded-2xl shadow-2xl flex items-center space-x-3 transform translate-y-20 opacity-0 transition-all duration-300 z-50 border border-brand-500/30">
+        <i class="fa-solid fa-circle-check text-brand-500 text-base"></i>
+        <span id="toastMessage">Action completed successfully.</span>
+    </div>
+
+    <!-- JavaScript Application Logic & Mock Data -->
+    <script>
+        let queueData = [
+            { 
+                queueNo: 'Q-101', 
+                patientName: 'Ahmad Zulkifli', 
+                branch: 'Bangsar', 
+                status: 'Waiting', 
+                bodyAreas: ['Back', 'Lower Back'], 
+                feedback: 'Initial check-in completed.', 
+                price: '-', 
+                outcome: '-',
+                history: [
+                    { timestamp: '2026-10-19 09:15 AM', actor: 'Aishah (Receptionist)', action: 'Queue Issued', bodyAreas: [], feedback: '-', price: '-', outcome: '-', comments: 'Patient arrived for scheduled Tit Tar alignment.' }
+                ]
+            },
+            { 
+                queueNo: 'Q-102', 
+                patientName: 'Michelle Wong', 
+                branch: 'Mont Kiara', 
+                status: 'In Consultation', 
+                bodyAreas: ['Shoulder', 'Arm'], 
+                feedback: 'Cervical tension noted by Sifu.', 
+                price: '-', 
+                outcome: '-',
+                history: [
+                    { timestamp: '2026-10-19 10:00 AM', actor: 'Aishah (Receptionist)', action: 'QR Check-In', bodyAreas: [], feedback: '-', price: '-', outcome: '-', comments: 'Self-registered via mobile QR.' },
+                    { timestamp: '2026-10-19 10:20 AM', actor: 'Dr. Marcus Lee (Sifu)', action: 'Tablet Consultation', bodyAreas: ['Shoulder', 'Arm'], feedback: 'Cervical tension noted by Sifu.', price: '-', outcome: 'In Consultation', comments: 'Examined shoulder mobility; prescribed mild adjustment.' }
+                ]
+            },
+            { 
+                queueNo: 'Q-103', 
+                patientName: 'David Raj', 
+                branch: 'Bangsar', 
+                status: 'Awaiting Admin Follow-up', 
+                bodyAreas: ['Lower Back', 'Leg'], 
+                feedback: 'Sciatic nerve compression, needs 3 sessions.', 
+                price: 'RM 450', 
+                outcome: 'Pending Contact',
+                history: [
+                    { timestamp: '2026-10-19 11:00 AM', actor: 'Receptionist', action: 'Queue Issued', bodyAreas: [], feedback: '-', price: '-', outcome: '-', comments: 'Walk-in registration.' },
+                    { timestamp: '2026-10-19 11:30 AM', actor: 'Sifu Ahmad', action: 'Tablet Findings Submitted', bodyAreas: ['Lower Back', 'Leg'], feedback: 'Sciatic nerve compression, needs 3 sessions.', price: 'RM 450', outcome: 'Awaiting Admin Follow-up', comments: 'Spinal misalignment detected at L4-L5 with muscular tightness.' }
+                ]
+            },
+            { 
+                queueNo: 'Q-104', 
+                patientName: 'Siti Nurhaliza', 
+                branch: 'PJ Branch', 
+                status: 'Awaiting Admin Follow-up', 
+                bodyAreas: ['Arm', 'Shoulder'], 
+                feedback: 'Tennis elbow strain.', 
+                price: 'RM 280', 
+                outcome: 'Reached - Wants Booking',
+                history: [
+                    { timestamp: '2026-10-19 01:10 PM', actor: 'Dr. Siti Aminah', action: 'Tablet Findings Submitted', bodyAreas: ['Arm', 'Shoulder'], feedback: 'Tennis elbow strain.', price: 'RM 280', outcome: 'Awaiting Admin Follow-up', comments: 'Tennis elbow strain from sports activity.' },
+                    { timestamp: '2026-10-19 02:00 PM', actor: 'Admin', action: 'Follow-Up Contact', bodyAreas: ['Arm', 'Shoulder'], feedback: 'Tennis elbow strain.', price: 'RM 280', outcome: 'Reached - Wants Booking', comments: 'Spoke with patient over phone. Wants booking next Tuesday.' }
+                ]
+            },
+            { 
+                queueNo: 'Q-105', 
+                patientName: 'John Tan', 
+                branch: 'Mont Kiara', 
+                status: 'Booked / Closed', 
+                bodyAreas: ['Back'], 
+                feedback: 'Upper thoracic adjustment.', 
+                price: 'RM 150', 
+                outcome: 'Booked Follow-up',
+                history: [
+                    { timestamp: '2026-09-28 10:00 AM', actor: 'Dr. Marcus Lee', action: 'Consultation Complete', bodyAreas: ['Back'], feedback: 'Upper thoracic adjustment.', price: 'RM 150', outcome: 'Completed', comments: 'Upper thoracic adjustment performed successfully.' },
+                    { timestamp: '2026-09-28 10:45 AM', actor: 'Admin', action: 'Follow-up Booked', bodyAreas: ['Back'], feedback: 'Upper thoracic adjustment.', price: 'RM 150', outcome: 'Booked Follow-up', comments: 'Scheduled next follow-up appointment.' }
+                ]
+            }
+        ];
+
+        let appointmentsData = [
+            { id: 'APT-1001', time: '09:00 AM', date: '2026-10-19', patient: 'John Tan', treatment: 'Follow-up Adjustment', branch: 'Mont Kiara', practitioner: 'Dr. Marcus Lee', status: 'Confirmed' },
+            { id: 'APT-1002', time: '10:15 AM', date: '2026-10-19', patient: 'Michelle Wong', treatment: 'Posture Correction', branch: 'Mont Kiara', practitioner: 'Dr. Marcus Lee', status: 'Completed' },
+            { id: 'APT-1003', time: '11:30 AM', date: '2026-10-19', patient: 'David Raj', treatment: 'Cranial Osteopathy', branch: 'Bangsar', practitioner: 'Sifu Ahmad', status: 'In Treatment' },
+            { id: 'APT-1004', time: '02:00 PM', date: '2026-10-19', patient: 'Siti Nurhaliza', treatment: 'Sports Injury Therapy', branch: 'PJ Branch', practitioner: 'Dr. Sarah Tan', status: 'Confirmed' }
+        ];
+
+        let patientsData = [
+            { id: 'PAT-801', name: 'Ahmad Zulkifli', nric: '850312-14-5231', phone: '+60 12-345 6789', gender: 'Male', age: 41, branch: 'Bangsar', lastVisit: '2026-10-19', condition: 'Chronic Lower Back Pain' },
+            { id: 'PAT-802', name: 'Michelle Wong', nric: '920524-10-6122', phone: '+60 16-987 6543', gender: 'Female', age: 34, branch: 'Mont Kiara', lastVisit: '2026-10-19', condition: 'Cervical Spondylosis' },
+            { id: 'PAT-803', name: 'David Raj', nric: '781102-08-1145', phone: '+60 19-222 3344', gender: 'Male', age: 48, branch: 'Bangsar', lastVisit: '2026-10-15', condition: 'Post-Accident Rehabilitation' },
+            { id: 'PAT-804', name: 'Siti Nurhaliza', nric: '900215-05-5028', phone: '+60 11-5544 3322', gender: 'Female', age: 36, branch: 'PJ Branch', lastVisit: '2026-10-10', condition: 'Tennis Elbow & Shoulder Strain' },
+            { id: 'PAT-805', name: 'John Tan', nric: '820718-07-5111', phone: '+60 17-888 9900', gender: 'Male', age: 44, branch: 'Mont Kiara', lastVisit: '2026-09-28', condition: 'Sciatica Nerve Compression' }
+        ];
+
+        let auditLogsData = [
+            { timestamp: '2026-10-19 14:22:10', user: 'Sifu Ahmad', role: 'Practitioner', branch: 'Bangsar', action: 'Submitted tablet findings & body areas for queue Q-103 David Raj', ip: '192.168.1.45' },
+            { timestamp: '2026-10-19 13:10:05', user: 'Aishah (Admin)', role: 'Receptionist', branch: 'Mont Kiara', action: 'Recorded admin follow-up outcome for Q-104 Siti Nurhaliza', ip: '192.168.2.14' },
+            { timestamp: '2026-10-19 11:05:40', user: 'Datuk Dr. Ahmad', role: 'Super Admin', branch: 'Bangsar', action: 'Updated RBAC permissions for Role: Receptionist', ip: '10.0.4.12' },
+            { timestamp: '2026-10-19 09:30:15', user: 'Aishah (Admin)', role: 'Receptionist', branch: 'Bangsar', action: 'Issued queue number Q-101 to Ahmad Zulkifli', ip: '192.168.1.18' }
+        ];
+
+        let currentQueueFilter = 'All';
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-gradient-to-r', 'from-brand-600', 'to-brand-700', 'text-white', 'shadow-lg', 'shadow-brand-600/25', 'border-brand-500/30');
+                btn.classList.add('hover:bg-neutral-100', 'hover:text-black', 'border-transparent');
+            });
+
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('nav-' + tabId);
+            activeBtn.classList.add('bg-gradient-to-r', 'from-brand-600', 'to-brand-700', 'text-white', 'shadow-lg', 'shadow-brand-600/25', 'border-brand-500/30');
+            activeBtn.classList.remove('hover:bg-neutral-100', 'border-transparent');
+
+            if (tabId === 'queue') {
+                renderQueueTable();
+            }
+        }
+
+        document.getElementById('roleSwitcher').addEventListener('change', function(e) {
+            const role = e.target.value;
+            const nameDisplay = document.getElementById('userNameDisplay');
+            const branchDisplay = document.getElementById('userBranchDisplay');
+
+            if (role === 'Super Admin') {
+                nameDisplay.innerText = 'Datuk Dr. Ahmad (Super Admin)';
+                branchDisplay.innerText = 'Bangsar Flagship Branch';
+            } else if (role === 'Branch Manager') {
+                nameDisplay.innerText = 'Encik Faizal (Manager)';
+                branchDisplay.innerText = 'Mont Kiara Branch';
+            } else if (role === 'Receptionist') {
+                nameDisplay.innerText = 'Aishah (Front Desk / Admin)';
+                branchDisplay.innerText = 'Bangsar Flagship Branch';
+            } else if (role === 'Practitioner') {
+                nameDisplay.innerText = 'Sifu Ahmad (Senior Therapist)';
+                branchDisplay.innerText = 'Bangsar Flagship Branch (Tablet)';
+            } else if (role === 'Management') {
+                nameDisplay.innerText = 'Puan Rosnah (Director)';
+                branchDisplay.innerText = 'Consolidated Executive View';
+            }
+            showNotification('Switched active role to: ' + role);
+        });
+
+        function showNotification(message) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
+
+        function renderQueueTable() {
+            const tbody = document.getElementById('queueTableBody');
+            tbody.innerHTML = '';
+            const query = document.getElementById('searchQueueInput').value.toLowerCase();
+
+            const filtered = queueData.filter(item => {
+                const matchStatus = (currentQueueFilter === 'All' || item.status === currentQueueFilter);
+                const matchQuery = item.patientName.toLowerCase().includes(query) || item.queueNo.toLowerCase().includes(query);
+                return matchStatus && matchQuery;
+            });
+
+            filtered.forEach(item => {
+                let badgeColor = 'bg-neutral-100 text-neutral-700 border-neutral-200';
+                if (item.status === 'Waiting') badgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
+                if (item.status === 'In Consultation') badgeColor = 'bg-brand-50 text-brand-700 border-brand-200';
+                if (item.status === 'Awaiting Admin Follow-up') badgeColor = 'bg-purple-50 text-purple-700 border-purple-200';
+                if (item.status === 'Booked / Closed') badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+
+                const bodyBadges = item.bodyAreas.map(b => `<span class="bg-neutral-100 text-brand-700 border border-neutral-200 text-[10px] px-2.5 py-0.5 rounded-lg font-semibold mr-1">${b}</span>`).join('');
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-neutral-50/80 transition-colors';
+                tr.innerHTML = `
+                    <td class="py-4 px-4 font-bold font-mono text-brand-600">${item.queueNo}</td>
+                    <td class="py-4 px-4 font-bold text-black">${item.patientName}</td>
+                    <td class="py-4 px-4 text-neutral-500">${item.branch}</td>
+                    <td class="py-4 px-4">${bodyBadges || '<span class="text-neutral-400">None selected</span>'}</td>
+                    <td class="py-4 px-4"><span class="text-[10px] font-bold px-3 py-1 rounded-full border ${badgeColor}">${item.status}</span></td>
+                    <td class="py-4 px-4">
+                        <span class="text-xs font-semibold text-black">${item.outcome}</span>
+                        ${item.price !== '-' ? `<span class="text-[10px] text-brand-600 font-semibold block">Est: ${item.price}</span>` : ''}
+                    </td>
+                    <td class="py-4 px-4 text-right space-x-1.5">
+                        <button onclick="openSessionHistoryModal('${item.queueNo}')" class="text-neutral-700 hover:text-black font-semibold text-xs bg-neutral-100 px-3 py-2 rounded-2xl border border-neutral-200 transition-all shadow-sm" title="View Comprehensive History">
+                            <i class="fa-solid fa-clock-rotate-left mr-1 text-brand-600"></i> History
+                        </button>
+                        <button onclick="openTabletConsultationModal('${item.queueNo}', '${item.patientName}')" class="text-brand-700 hover:text-brand-900 font-semibold text-xs bg-brand-50 px-3 py-2 rounded-2xl border border-brand-200 transition-all shadow-sm">Tablet</button>
+                        <button onclick="openAdminFollowUpModal('${item.queueNo}', '${item.patientName}')" class="text-neutral-800 hover:text-black font-semibold text-xs bg-neutral-100 px-3 py-2 rounded-2xl border border-neutral-200 transition-all shadow-sm">Follow-up</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterQueueStatus(status) {
+            currentQueueFilter = status;
+            document.querySelectorAll('.qfilter-btn').forEach(btn => {
+                btn.classList.remove('bg-gradient-to-r', 'from-brand-600', 'to-brand-500', 'text-white', 'shadow-md', 'shadow-brand-500/20', 'font-bold');
+                btn.classList.add('bg-neutral-100', 'text-neutral-700', 'border', 'border-neutral-200');
+            });
+            const activeBtn = document.getElementById('qfilter-' + status);
+            activeBtn.classList.remove('bg-neutral-100', 'text-neutral-700', 'border', 'border-neutral-200');
+            activeBtn.classList.add('bg-gradient-to-r', 'from-brand-600', 'to-brand-500', 'text-white', 'shadow-md', 'shadow-brand-500/20', 'font-bold');
+            renderQueueTable();
+        }
+
+        /* ENHANCED FUNCTION: View Comprehensive Session History Modal */
+        function openSessionHistoryModal(queueNo) {
+            const item = queueData.find(q => q.queueNo === queueNo);
+            if (!item) return;
+
+            modalTitle.innerText = `Comprehensive Session History: ${item.queueNo} (${item.patientName})`;
+            
+            let historyHtml = '';
+            if (item.history && item.history.length > 0) {
+                historyHtml = item.history.map((h, idx) => {
+                    const bodyAreaBadges = (h.bodyAreas && h.bodyAreas.length > 0) 
+                        ? h.bodyAreas.map(b => `<span class="bg-brand-50 text-brand-700 border border-brand-200 text-[10px] px-2 py-0.5 rounded font-semibold mr-1">${b}</span>`).join('') 
+                        : '<span class="text-neutral-400 italic">None recorded</span>';
+
+                    return `
+                        <div class="relative pl-6 pb-6 border-l-2 border-brand-500/30 last:border-0 last:pb-0">
+                            <div class="absolute -left-[7px] top-0 w-3 h-3 rounded-full bg-brand-600 border-2 border-white shadow-sm"></div>
+                            <div class="bg-neutral-50 p-4 rounded-2xl border border-neutral-200 space-y-2.5 shadow-sm">
+                                <div class="flex justify-between items-center text-[10px]">
+                                    <span class="font-bold text-brand-600 font-mono"><i class="fa-regular fa-clock mr-1"></i>${h.timestamp}</span>
+                                    <span class="bg-neutral-200 text-neutral-800 font-bold px-2.5 py-0.5 rounded-lg">${h.actor}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <p class="font-extrabold text-black text-xs">Action: ${h.action}</p>
+                                    <span class="text-[10px] bg-neutral-200/80 text-neutral-700 px-2 py-0.5 rounded font-semibold">Outcome: ${h.outcome}</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 text-[11px] bg-white p-3 rounded-xl border border-neutral-200/60">
+                                    <div>
+                                        <span class="text-neutral-400 font-bold block uppercase text-[9px]">Body Areas Targeted:</span>
+                                        <div class="mt-1 flex flex-wrap gap-1">${bodyAreaBadges}</div>
+                                    </div>
+                                    <div>
+                                        <span class="text-neutral-400 font-bold block uppercase text-[9px]">Discussed Price / Package:</span>
+                                        <span class="font-bold text-brand-600 mt-1 block">${h.price}</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-neutral-400 font-bold uppercase text-[9px] block">Clinical Findings / Feedback:</span>
+                                    <p class="text-neutral-800 text-xs mt-0.5 font-medium bg-white p-2.5 rounded-xl border border-neutral-200/60">${h.feedback}</p>
+                                </div>
+                                <div class="pt-1 text-[11px] text-neutral-600">
+                                    <strong class="text-neutral-500">Session Comments:</strong> ${h.comments}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                historyHtml = '<p class="text-xs text-neutral-400 italic">No historical session records found.</p>';
+            }
+
+            modalBody.innerHTML = `
+                <div class="space-y-4 text-xs">
+                    <div class="p-3.5 bg-brand-50 border border-brand-200 rounded-2xl flex justify-between items-center text-brand-800">
+                        <div>
+                            <span class="font-bold">Branch:</span> ${item.branch} | <span class="font-bold">Current Status:</span> ${item.status}
+                        </div>
+                        <div>
+                            <span class="font-bold">Active Body Areas:</span> ${item.bodyAreas.join(', ') || 'None'}
+                        </div>
+                    </div>
+                    <div class="space-y-3 pt-2">
+                        <h4 class="font-bold text-black text-sm uppercase tracking-wider text-[11px]">Chronological Session History & Audit Trail</h4>
+                        <div class="space-y-4 pl-2">
+                            ${historyHtml}
+                        </div>
+                    </div>
+                    <div class="flex justify-end pt-4 border-t border-neutral-200">
+                        <button onclick="closeModal()" class="px-5 py-2.5 bg-neutral-100 text-neutral-700 font-semibold rounded-2xl hover:bg-neutral-200">Close Viewer</button>
+                    </div>
+                </div>
+            `;
+            openModal();
+        }
+
+        function renderAppointments(dataToRender) {
+            const tbody = document.getElementById('appointmentsTableBody');
+            tbody.innerHTML = '';
+
+            dataToRender.forEach(apt => {
+                let badgeColor = 'bg-neutral-100 text-neutral-700 border-neutral-200';
+                if (apt.status === 'Confirmed') badgeColor = 'bg-brand-50 text-brand-700 border-brand-200';
+                if (apt.status === 'Completed') badgeColor = 'bg-purple-50 text-purple-700 border-purple-200';
+                if (apt.status === 'In Treatment') badgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-neutral-50/80 transition-colors';
+                tr.innerHTML = `
+                    <td class="py-4 px-4">
+                        <span class="font-bold text-black">${apt.time}</span>
+                        <div class="text-[10px] text-neutral-400 font-mono">${apt.date}</div>
+                    </td>
+                    <td class="py-4 px-4 font-bold text-black">${apt.patient}</td>
+                    <td class="py-4 px-4 text-neutral-800">${apt.treatment}</td>
+                    <td class="py-4 px-4 text-neutral-500">${apt.branch}</td>
+                    <td class="py-4 px-4 text-neutral-500">${apt.practitioner}</td>
+                    <td class="py-4 px-4"><span class="text-[10px] font-bold px-3 py-1 rounded-full border ${badgeColor}">${apt.status}</span></td>
+                    <td class="py-4 px-4 text-right space-x-2">
+                        <button onclick="showNotification('Appointment ${apt.id} updated.')" class="text-neutral-700 hover:text-black text-xs bg-neutral-100 px-3 py-1.5 rounded-2xl border border-neutral-200">Edit</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterAppointments() {
+            const branch = document.getElementById('filterBranch').value;
+            const practitioner = document.getElementById('filterPractitioner').value;
+            const status = document.getElementById('filterStatus').value;
+            const query = document.getElementById('searchAppointmentInput').value.toLowerCase();
+
+            const filtered = appointmentsData.filter(apt => {
+                const matchBranch = (branch === 'All' || apt.branch === branch);
+                const matchPractitioner = (practitioner === 'All' || apt.practitioner === practitioner);
+                const matchStatus = (status === 'All' || apt.status === status);
+                const matchQuery = apt.patient.toLowerCase().includes(query) || apt.treatment.toLowerCase().includes(query);
+                return matchBranch && matchPractitioner && matchStatus && matchQuery;
+            });
+
+            renderAppointments(filtered);
+        }
+
+        function renderPatients(dataToRender) {
+            const grid = document.getElementById('patientCardGrid');
+            grid.innerHTML = '';
+            document.getElementById('patientCountDisplay').innerText = dataToRender.length;
+
+            dataToRender.forEach(pat => {
+                const card = document.createElement('div');
+                card.className = 'glass-panel p-6 rounded-3xl flex flex-col justify-between space-y-4 hover:border-brand-400 transition-all';
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-brand-700 bg-brand-50 border border-brand-200 px-2.5 py-1 rounded-xl">${pat.id}</span>
+                                <h3 class="font-bold text-black text-base mt-2">${pat.name}</h3>
+                            </div>
+                            <span class="text-xs bg-neutral-100 text-neutral-700 border border-neutral-200 font-medium px-3 py-1 rounded-2xl">${pat.branch}</span>
+                        </div>
+                        <div class="mt-4 space-y-2 text-xs text-neutral-600">
+                            <div class="flex justify-between"><span class="text-neutral-400">NRIC / Passport:</span> <span class="font-semibold text-black font-mono">${pat.nric}</span></div>
+                            <div class="flex justify-between"><span class="text-neutral-400">Phone:</span> <span class="font-semibold text-black">${pat.phone}</span></div>
+                            <div class="pt-3 border-t border-neutral-100">
+                                <span class="text-[10px] text-brand-600 uppercase font-bold tracking-wider">Primary Condition:</span>
+                                <p class="text-black font-medium mt-0.5">${pat.condition}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-neutral-100 flex items-center justify-between">
+                        <span class="text-[10px] text-neutral-400"><i class="fa-regular fa-clock mr-1"></i> Last Visit: ${pat.lastVisit}</span>
+                        <button onclick="showNotification('Opening dossier for ${pat.name}')" class="bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white text-xs px-4 py-2.5 rounded-2xl font-bold transition-all shadow-md shadow-brand-500/20">
+                            View Profile
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterPatients() {
+            const query = document.getElementById('patientSearchInput').value.toLowerCase();
+            const filtered = patientsData.filter(p => 
+                p.name.toLowerCase().includes(query) || 
+                p.nric.toLowerCase().includes(query) || 
+                p.phone.toLowerCase().includes(query)
+            );
+            renderPatients(filtered);
+        }
+
+        function renderAuditLogs(dataToRender) {
+            const tbody = document.getElementById('auditTableBody');
+            tbody.innerHTML = '';
+
+            dataToRender.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-neutral-50/80 transition-colors';
+                tr.innerHTML = `
+                    <td class="py-4 px-4 font-mono text-brand-600 text-[11px]">${log.timestamp}</td>
+                    <td class="py-4 px-4 font-bold text-black">${log.user}</td>
+                    <td class="py-4 px-4"><span class="bg-neutral-100 text-neutral-700 border border-neutral-200 px-2.5 py-1 rounded-xl text-[10px] font-bold">${log.role}</span></td>
+                    <td class="py-4 px-4 text-neutral-500">${log.branch}</td>
+                    <td class="py-4 px-4 text-black font-medium">${log.action}</td>
+                    <td class="py-4 px-4 font-mono text-[11px] text-neutral-400">${log.ip}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterAuditLogs() {
+            const query = document.getElementById('auditSearchInput').value.toLowerCase();
+            const filtered = auditLogsData.filter(l => 
+                l.user.toLowerCase().includes(query) || 
+                l.action.toLowerCase().includes(query) ||
+                l.branch.toLowerCase().includes(query)
+            );
+            renderAuditLogs(filtered);
+        }
+
+        const modal = document.getElementById('appModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+
+        function openModal() { modal.classList.remove('hidden'); }
+        function closeModal() { modal.classList.add('hidden'); }
+
+        function openIssueQueueModal() {
+            modalTitle.innerText = 'Issue Daily Queue Number (FR-04a)';
+            modalBody.innerHTML = `
+                <div class="space-y-4 text-xs">
+                    <div>
+                        <label class="block font-bold text-brand-600 uppercase text-[10px]">Select Patient / Lookup</label>
+                        <select class="w-full mt-1.5 bg-white border border-neutral-200 p-3 rounded-2xl font-semibold text-black shadow-inner focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                            <option>Ahmad Zulkifli (PAT-801)</option>
+                            <option>Michelle Wong (PAT-802)</option>
+                            <option>David Raj (PAT-803)</option>
+                            <option>Siti Nurhaliza (PAT-804)</option>
+                            <option>+ Register New Walk-in Patient</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-bold text-brand-600 uppercase text-[10px]">Clinic Branch</label>
+                            <select class="w-full mt-1.5 bg-white border border-neutral-200 p-3 rounded-2xl font-semibold text-black shadow-inner focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <option>Bangsar Flagship</option>
+                                <option>Mont Kiara Branch</option>
+                                <option>Petaling Jaya (PJ)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-brand-600 uppercase text-[10px]">Generated Queue Number</label>
+                            <input type="text" value="Q-106 (Reset Daily)" readonly class="w-full mt-1.5 bg-neutral-50 border border-neutral-200 p-3 rounded-2xl font-bold text-brand-600 font-mono">
+                        </div>
+                    </div>
+                    <div class="p-3.5 bg-brand-50 border border-brand-200 rounded-2xl text-brand-800 text-[11px]">
+                        <i class="fa-solid fa-info-circle mr-1 text-brand-600"></i> Queue numbers are daily sequence references and do not replace permanent Patient IDs.
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-neutral-200">
+                        <button onclick="closeModal()" class="px-5 py-2.5 bg-neutral-100 text-neutral-700 font-semibold rounded-2xl hover:bg-neutral-200">Cancel</button>
+                        <button onclick="closeModal(); showNotification('Queue number Q-106 successfully issued and logged.');" class="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-brand-500 text-white font-bold rounded-2xl shadow-md shadow-brand-500/20 hover:from-brand-700 hover:to-brand-600">Issue & Add to Waiting Queue</button>
+                    </div>
+                </div>
+            `;
+            openModal();
+        }
+
+        function openQRPortalModal() {
+            modalTitle.innerText = 'Patient QR Code & Self-Check-In Mobile Portal';
+            modalBody.innerHTML = `
+                <div class="space-y-4 text-xs">
+                    <div class="text-center p-4 bg-neutral-50 border border-neutral-200 rounded-3xl">
+                        <div class="w-36 h-36 bg-white mx-auto border-2 border-dashed border-neutral-300 rounded-2xl flex items-center justify-center p-2 shadow-inner">
+                            <i class="fa-solid fa-qrcode text-6xl text-neutral-800"></i>
+                        </div>
+                        <p class="font-bold text-black mt-3">Scan with Mobile Phone Camera</p>
+                        <p class="text-[11px] text-neutral-500">Patients scan this QR at reception or via WhatsApp link to instantly fill their intake form.</p>
+                    </div>
+                    <div class="p-4 bg-brand-50 border border-brand-200 rounded-2xl space-y-2">
+                        <span class="font-bold text-brand-800 text-xs uppercase tracking-wider"><i class="fa-solid fa-bolt mr-1"></i> Simulate Patient Mobile Submission:</span>
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <input type="text" id="simPatientName" placeholder="Patient Full Name" value="Jessica Lee" class="bg-white border border-neutral-200 p-2.5 rounded-xl font-medium text-black">
+                            <input type="text" id="simPatientPhone" placeholder="Phone (+60...)" value="+60 12-998 8877" class="bg-white border border-neutral-200 p-2.5 rounded-xl font-medium text-black">
+                        </div>
+                        <select id="simPatientBranch" class="w-full bg-white border border-neutral-200 p-2.5 rounded-xl font-medium text-black">
+                            <option>Bangsar Flagship</option>
+                            <option>Mont Kiara Branch</option>
+                            <option>Petaling Jaya (PJ)</option>
+                        </select>
+                        <button onclick="submitQRCheckIn()" class="w-full py-2.5 bg-gradient-to-r from-brand-600 to-brand-500 text-white font-bold rounded-xl shadow-md shadow-brand-500/20 mt-2">
+                            Simulate Mobile Form Submission & Generate Queue #
+                        </button>
+                    </div>
+                    <div class="flex justify-end pt-2 border-t border-neutral-200">
+                        <button onclick="closeModal()" class="px-5 py-2.5 bg-neutral-100 text-neutral-700 font-semibold rounded-2xl">Close Portal View</button>
+                    </div>
+                </div>
+            `;
+            openModal();
+        }
+
+        function submitQRCheckIn() {
+            const name = document.getElementById('simPatientName').value;
+            const phone = document.getElementById('simPatientPhone').value;
+            const branch = document.getElementById('simPatientBranch').value;
+            const newQ = 'Q-1' + (queueData.length + 101);
+
+            queueData.unshift({
+                queueNo: newQ,
+                patientName: name,
+                branch: branch.split(' ')[0],
+                status: 'Waiting',
+                bodyAreas: ['Lower Back', 'Shoulder'],
+                feedback: 'Submitted via Patient QR Kiosk.',
+                price: '-',
+                outcome: 'Waiting',
+                history: [
+                    { timestamp: '2026-10-19 03:15 PM', actor: 'Patient (QR Kiosk)', action: 'Self Check-In', bodyAreas: ['Lower Back', 'Shoulder'], feedback: 'Submitted via Patient QR Kiosk.', price: '-', outcome: 'Waiting', comments: 'Intake form submitted successfully via mobile.' }
+                ]
+            });
+
+            closeModal();
+            showNotification(`QR Check-in successful! ${name} assigned queue number ${newQ}.`);
+            if (!document.getElementById('tab-queue').classList.contains('hidden')) {
+                renderQueueTable();
+            }
+        }
+
+        function openTabletConsultationModal(queueNo, patientName) {
+            modalTitle.innerText = 'Tablet Sifu Findings & Body Areas: ' + queueNo + ' (' + patientName + ')';
+            modalBody.innerHTML = `
+                <div class="space-y-4 text-xs">
+                    <div class="bg-brand-50 p-4 rounded-2xl border border-brand-200">
+                        <span class="font-bold text-brand-800 text-sm">Consultation in Progress</span>
+                        <p class="text-[11px] text-brand-700 mt-0.5">Sifu is recording clinical assessment on tablet device.</p>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-brand-600 uppercase text-[10px] mb-2.5">Select Affected Body Areas (Multiple Selection)</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <label class="flex items-center space-x-2.5 p-3 bg-white border border-neutral-200 rounded-2xl cursor-pointer hover:border-brand-400 shadow-sm">
+                                <input type="checkbox" id="body-back" checked class="rounded text-brand-600 focus:ring-brand-500 bg-neutral-50 border-neutral-300 w-4 h-4">
+                                <span class="font-medium text-black">Back</span>
+                            </label>
+                            <label class="flex items-center space-x-2.5 p-3 bg-white border border-neutral-200 rounded-2xl cursor-pointer hover:border-brand-400 shadow-sm">
+                                <input type="checkbox" id="body-lower" checked class="rounded text-brand-600 focus:ring-brand-500 bg-neutral-50 border-neutral-300 w-4 h-4">
+                                <span class="font-medium text-black">Lower Back</span>
+                            </label>
+                            <label class="flex items-center space-x-2.5 p-3 bg-white border border-neutral-200 rounded-2xl cursor-pointer hover:border-brand-400 shadow-sm">
+                                <input type="checkbox" id="body-shoulder" class="rounded text-brand-600 focus:ring-brand-500 bg-neutral-50 border-neutral-300 w-4 h-4">
+                                <span class="font-medium text-black">Shoulder</span>
+                            </label>
+                            <label class="flex items-center space-x-2.5 p-3 bg-white border border-neutral-200 rounded-2xl cursor-pointer hover:border-brand-400 shadow-sm">
+                                <input type="checkbox" id="body-arm" class="rounded text-brand-600 focus:ring-brand-500 bg-neutral-50 border-neutral-300 w-4 h-4">
+                                <span class="font-medium text-black">Arm</span>
+                            </label>
+                            <label class="flex items-center space-x-2.5 p-3 bg-white border border-neutral-200 rounded-2xl cursor-pointer hover:border-brand-400 shadow-sm">
+                                <input type="checkbox" id="body-leg" class="rounded text-brand-600 focus:ring-brand-500 bg-neutral-50 border-neutral-300 w-4 h-4">
+                                <span class="font-medium text-black">Leg</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-brand-600 uppercase text-[10px]">Clinical Findings & Feedback</label>
+                        <textarea id="tabletFeedbackInput" rows="3" class="w-full mt-1.5 bg-white border border-neutral-200 p-3 rounded-2xl font-medium text-black shadow-inner focus:ring-2 focus:ring-brand-500 focus:outline-none">Spinal misalignment detected at L4-L5 with muscular tightness in lower back.</textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-neutral-200">
+                        <button onclick="closeModal()" class="px-5 py-2.5 bg-neutral-100 text-neutral-700 font-semibold rounded-2xl hover:bg-neutral-200">Cancel</button>
+                        <button onclick="submitTabletConsultation('${queueNo}')" class="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-brand-500 text-white font-bold rounded-2xl shadow-md shadow-brand-500/20 hover:from-brand-700 hover:to-brand-600">Submit Consultation Complete</button>
+                    </div>
+                </div>
+            `;
+            openModal();
+        }
+
+        function submitTabletConsultation(queueNo) {
+            const item = queueData.find(q => q.queueNo === queueNo);
+            if (!item) return;
+
+            let selectedAreas = [];
+            if (document.getElementById('body-back').checked) selectedAreas.push('Back');
+            if (document.getElementById('body-lower').checked) selectedAreas.push('Lower Back');
+            if (document.getElementById('body-shoulder').checked) selectedAreas.push('Shoulder');
+            if (document.getElementById('body-arm').checked) selectedAreas.push('Arm');
+            if (document.getElementById('body-leg').checked) selectedAreas.push('Leg');
+
+            const feedback = document.getElementById('tabletFeedbackInput').value;
+            item.bodyAreas = selectedAreas;
+            item.feedback = feedback;
+            item.status = 'Awaiting Admin Follow-up';
+            item.outcome = 'Awaiting Admin Follow-up';
+
+            // Push to history
+            if (!item.history) item.history = [];
+            item.history.push({
+                timestamp: '2026-10-19 03:45 PM',
+                actor: 'Sifu Ahmad',
+                action: 'Tablet Consultation Completed',
+                bodyAreas: selectedAreas,
+                feedback: feedback,
+                price: item.price,
+                outcome: 'Awaiting Admin Follow-up',
+                comments: 'Sifu finished assessment on tablet and submitted findings to admin queue.'
+            });
+
+            closeModal();
+            showNotification(`Consultation for ${queueNo} successfully completed and added to history.`);
+            if (!document.getElementById('tab-queue').classList.contains('hidden')) {
+                renderQueueTable();
+            }
+        }
+
+        function openAdminFollowUpModal(queueNo, patientName) {
+            modalTitle.innerText = 'Admin Follow-Up & Price Discussion: ' + queueNo + ' (' + patientName + ')';
+            modalBody.innerHTML = `
+                <div class="space-y-4 text-xs">
+                    <div class="bg-neutral-100 p-4 rounded-2xl border border-neutral-200">
+                        <span class="font-bold text-black text-sm">Submitted Findings Summary</span>
+                        <p class="text-[11px] text-neutral-600 mt-0.5">Sifu notes: Spinal misalignment at L4-L5. Body areas: Back, Lower Back.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-bold text-brand-600 uppercase text-[10px]">Contact Outcome</label>
+                            <select id="adminOutcomeSelect" class="w-full mt-1.5 bg-white border border-neutral-200 p-3 rounded-2xl font-semibold text-black shadow-inner focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <option>Reached - Wants Booking</option>
+                                <option>Pending Contact / No Answer</option>
+                                <option>Deferred</option>
+                                <option>Declined</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-brand-600 uppercase text-[10px]">Discussed Price (MYR)</label>
+                            <input type="text" id="adminPriceInput" value="RM 350 (3 Sessions)" class="w-full mt-1.5 bg-white border border-neutral-200 p-3 rounded-2xl font-semibold text-black shadow-inner focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-brand-600 uppercase text-[10px]">Admin Notes / Discussion Log</label>
+                        <textarea id="adminNotesInput" rows="2" class="w-full mt-1.5 bg-white border border-neutral-200 p-3 rounded-2xl font-medium text-black shadow-inner focus:ring-2 focus:ring-brand-500 focus:outline-none">Spoke with patient over phone. Agreed to proceed with 3 sessions package starting next Tuesday.</textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-neutral-200">
+                        <button onclick="closeModal()" class="px-5 py-2.5 bg-neutral-100 text-neutral-700 font-semibold rounded-2xl hover:bg-neutral-200">Close</button>
+                        <button onclick="submitAdminFollowUp('${queueNo}')" class="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-brand-500 text-white font-bold rounded-2xl shadow-md shadow-brand-500/20 hover:from-brand-700 hover:to-brand-600">Save & Proceed to Booking</button>
+                    </div>
+                </div>
+            `;
+            openModal();
+        }
+
+        function submitAdminFollowUp(queueNo) {
+            const item = queueData.find(q => q.queueNo === queueNo);
+            if (!item) return;
+
+            const outcome = document.getElementById('adminOutcomeSelect').value;
+            const price = document.getElementById('adminPriceInput').value;
+            const notes = document.getElementById('adminNotesInput').value;
+
+            item.outcome = outcome;
+            item.price = price;
+            item.status = 'Booked / Closed';
+
+            if (!item.history) item.history = [];
+            item.history.push({
+                timestamp: '2026-10-19 04:10 PM',
+                actor: 'Admin',
+                action: 'Admin Follow-Up & Price Discussion',
+                bodyAreas: item.bodyAreas,
+                feedback: item.feedback,
+                price: price,
+                outcome: outcome,
+                comments: notes
+            });
+
+            closeModal();
+            showNotification(`Admin follow-up recorded for ${queueNo}.`);
+            if (!document.getElementById('tab-queue').classList.contains('hidden')) {
+                renderQueueTable();
+            }
+        }
+
+        function openBookingModal() {
+            modalTitle.innerText = 'Schedule Follow-up Appointment (Conflict Check Enabled)';
+            modalBody.innerHTML = `
+                <div class="space-y-4 text-xs">
+                    <div>
+                        <label class="block font-bold text-brand-600 uppercase text-[10px]">Selected Patient</label>
+                        <input type="text" value="David Raj (PAT-803)" readonly class="w-full mt-1.5 bg-neutral-50 border border-neutral-200 p-3 rounded-2xl font-semibold text-black">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-bold text-brand-600 uppercase text-[10px]">Clinic Branch</label>
+                            <select class="w-full mt-1.5 bg-white border border-neutral-200 p-3 rounded-2xl font-semibold text-black shadow-inner focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <option>Bangsar Flagship</option>
+                                <option>Mont Kiara Branch</option>
+                                <option>Petaling Jaya (PJ)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-brand-600 uppercase text-[10px]">Treatment Type</label>
+                            <select class="w-full mt-1.5 bg-white border border-neutral-200 p-3 rounded-2xl font-semibold text-black shadow-inner focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <option>Spinal Adjustment (45 mins)</option>
+                                <option>Posture Correction (60 mins)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-bold text-brand-600 uppercase text-[10px]">Assigned Practitioner</label>
+                            <select class="w-full mt-1.5 bg-white border border-neutral-200 p-3 rounded-2xl font-semibold text-black shadow-inner focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <option>Sifu Ahmad (Senior Therapist)</option>
+                                <option>Dr. Sarah Tan (Senior Osteopath)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-brand-600 uppercase text-[10px]">Date & Time Slot</label>
+                            <input type="datetime-local" value="2026-10-21T10:00" class="w-full mt-1.5 bg-white border border-neutral-200 p-3 rounded-2xl font-semibold text-black shadow-inner focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-neutral-200">
+                        <button onclick="closeModal()" class="px-5 py-2.5 bg-neutral-100 text-neutral-700 font-semibold rounded-2xl hover:bg-neutral-200">Cancel</button>
+                        <button onclick="closeModal(); showNotification('Follow-up appointment successfully booked and linked to consultation.');" class="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-brand-500 text-white font-bold rounded-2xl shadow-md shadow-brand-500/20 hover:from-brand-700 hover:to-brand-600">Confirm & Link Booking</button>
+                    </div>
+                </div>
+            `;
+            openModal();
+        }
+
+        function openCommsLogModal() {
+            modalTitle.innerText = 'Simulated WhatsApp / SMS Reminder & Comms Log';
+            modalBody.innerHTML = `
+                <div class="space-y-4 text-xs">
+                    <div class="p-3.5 bg-brand-50 border border-brand-200 rounded-2xl text-brand-800 text-[11px]">
+                        <i class="fa-brands fa-whatsapp text-brand-600 mr-1 text-sm"></i> Staff can dispatch instant appointment confirmations & automated reminders to patients.
+                    </div>
+                    <div>
+                        <label class="block font-bold text-brand-600 uppercase text-[10px]">Select Recipient Patient</label>
+                        <select class="w-full mt-1.5 bg-white border border-neutral-200 p-3 rounded-2xl font-semibold text-black shadow-inner">
+                            <option>John Tan (+60 17-888 9900) - Tomorrow 09:00 AM</option>
+                            <option>Michelle Wong (+60 16-987 6543) - Confirmed</option>
+                            <option>David Raj (+60 19-222 3344) - Follow-up Needed</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-brand-600 uppercase text-[10px]">Message Template</label>
+                        <select class="w-full mt-1.5 bg-white border border-neutral-200 p-3 rounded-2xl font-semibold text-black shadow-inner">
+                            <option>Appointment Reminder (24 Hours Prior)</option>
+                            <option>Post-Consultation Follow-up Offer</option>
+                            <option>Custom Message</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-brand-600 uppercase text-[10px]">Message Preview (WhatsApp Format)</label>
+                        <textarea rows="3" class="w-full mt-1.5 bg-neutral-50 border border-neutral-200 p-3 rounded-2xl font-medium text-black">Hello Mr. John Tan, this is a friendly reminder from Osteocare Bangsar for your Tit Tar adjustment tomorrow at 09:00 AM. Please arrive 10 mins early. Reply YES to confirm.</textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-neutral-200">
+                        <button onclick="closeModal()" class="px-5 py-2.5 bg-neutral-100 text-neutral-700 font-semibold rounded-2xl">Cancel</button>
+                        <button onclick="closeModal(); showNotification('Simulated WhatsApp reminder successfully dispatched to patient.');" class="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-brand-500 text-white font-bold rounded-2xl shadow-md shadow-brand-500/20">Send WhatsApp Message</button>
+                    </div>
+                </div>
+            `;
+            openModal();
+        }
+
+        function openPainHeatmapModal() {
+            modalTitle.innerText = 'Clinic-Wide Pain Heatmap & Symptom Summary';
+            modalBody.innerHTML = `
+                <div class="space-y-4 text-xs">
+                    <p class="text-neutral-500">Aggregated breakdown of patient-reported musculoskeletal conditions across all 3 active branches this month:</p>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between font-bold text-black mb-1">
+                                <span>Lower Back & Spinal L4-L5</span>
+                                <span class="text-brand-600">42% of patients</span>
+                            </div>
+                            <div class="w-full bg-neutral-200 h-2.5 rounded-full overflow-hidden">
+                                <div class="bg-gradient-to-r from-brand-600 to-brand-500 h-full w-[42%]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between font-bold text-black mb-1">
+                                <span>Shoulder & Cervical Tension</span>
+                                <span class="text-brand-600">28% of patients</span>
+                            </div>
+                            <div class="w-full bg-neutral-200 h-2.5 rounded-full overflow-hidden">
+                                <div class="bg-gradient-to-r from-brand-600 to-brand-500 h-full w-[28%]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between font-bold text-black mb-1">
+                                <span>Sciatic Nerve Compression</span>
+                                <span class="text-brand-600">18% of patients</span>
+                            </div>
+                            <div class="w-full bg-neutral-200 h-2.5 rounded-full overflow-hidden">
+                                <div class="bg-gradient-to-r from-brand-600 to-brand-500 h-full w-[18%]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between font-bold text-black mb-1">
+                                <span>Tennis Elbow & Arm Strain</span>
+                                <span class="text-brand-600">12% of patients</span>
+                            </div>
+                            <div class="w-full bg-neutral-200 h-2.5 rounded-full overflow-hidden">
+                                <div class="bg-gradient-to-r from-brand-600 to-brand-500 h-full w-[12%]"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl flex items-center justify-between text-neutral-600">
+                        <span><i class="fa-solid fa-lightbulb text-brand-600 mr-2"></i> Insight: Lower back treatments peak on weekends. Consider allocating senior Sifu accordingly.</span>
+                    </div>
+                    <div class="flex justify-end pt-4 border-t border-neutral-200">
+                        <button onclick="closeModal()" class="px-5 py-2.5 bg-neutral-100 text-neutral-700 font-semibold rounded-2xl">Close</button>
+                    </div>
+                </div>
+            `;
+            openModal();
+        }
+
+        function updateDashboardMetrics() {
+            const branch = document.getElementById('dashBranchFilter').value;
+            if (branch === 'Bangsar') {
+                document.getElementById('kpiTotalPatients').innerText = '2,620';
+                document.getElementById('kpiTodayQueue').innerText = '10';
+                document.getElementById('kpiRevenue').innerText = 'RM 74,500';
+            } else if (branch === 'Mont Kiara') {
+                document.getElementById('kpiTotalPatients').innerText = '1,810';
+                document.getElementById('kpiTodayQueue').innerText = '5';
+                document.getElementById('kpiRevenue').innerText = 'RM 56,200';
+            } else if (branch === 'PJ Branch') {
+                document.getElementById('kpiTotalPatients').innerText = '990';
+                document.getElementById('kpiTodayQueue').innerText = '3';
+                document.getElementById('kpiRevenue').innerText = 'RM 38,200';
+            } else {
+                document.getElementById('kpiTotalPatients').innerText = '5,420';
+                document.getElementById('kpiTodayQueue').innerText = '18';
+                document.getElementById('kpiRevenue').innerText = 'RM 168,900';
+            }
+            showNotification('Dashboard metrics updated for branch: ' + branch);
+        }
+
+        window.onload = function() {
+            renderQueueTable();
+            renderAppointments(appointmentsData);
+            renderPatients(patientsData);
+            renderAuditLogs(auditLogsData);
+        };
+    </script>
+</body>
+</html>

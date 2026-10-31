@@ -1,0 +1,769 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Signboard Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: app shell, fixed sidebar of sections on the left, working area on the right; collapses to a top tab strip on phones */
+:root{
+  --bg:#f8f8f9; --surface:#ffffff; --sunk:#f0f0f2; --ink:#16181b; --muted:#62666d; --line:#e3e4e8;
+  --accent:#0d6b63; --accent-ink:#ffffff; --accent-soft:#d8ecea;
+  --good:#16794a; --good-soft:#dcf1e5; --warn:#a85a07; --warn-soft:#f8ead5; --bad:#b42323; --bad-soft:#f8dddd;
+  --f-ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --f-sign:"Archivo","Arial Narrow",Arial,sans-serif;
+  --bar:#0a0d0c;
+  --glass:rgba(255,255,255,.72); --glass-line:#e8e8ec;
+  --bg-grad:linear-gradient(160deg,#ffffff 0%,#f9f9fa 55%,#efeff2 100%);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);background-image:var(--bg-grad);background-attachment:fixed;color:var(--ink);font:14px/1.5 var(--f-ui)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bar)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:calc(100% - 60px)}
+.side{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-right:1px solid var(--glass-line);padding:12px 12px 20px;display:flex;flex-direction:column;gap:4px;position:sticky;top:calc(60px + env(safe-area-inset-top,0px));height:calc(100vh - 60px);overflow:auto}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:#3cc2b3;display:grid;place-items:center;color:#06211e;font:800 16px var(--f-sign)}
+.brand b{font:700 18px var(--f-sign);letter-spacing:.01em;color:#fff}
+.brand small{display:block;color:#8d9a98;font-size:11px;line-height:1.2}
+.nav-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:14px 10px 4px}
+.nav a{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:7px;color:var(--ink);text-decoration:none}
+.nav a:hover{background:var(--sunk)}
+.nav a[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.nav a .count{font:12px var(--f-mono);color:var(--muted)}
+.side-foot{margin-top:auto;padding:12px 10px 0;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.main{min-width:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:12px;justify-content:space-between;min-height:60px;padding-block:10px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));background:var(--bar);color:#fff;flex-wrap:wrap;position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
+.tenant{display:flex;align-items:center;gap:10px;min-width:0}
+.tenant .av{width:32px;height:32px;border-radius:50%;background:#7a3f17;color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px;flex:none}
+.tenant b{display:block;line-height:1.2;color:#fff}
+.tenant span{color:#9aa8a5;font-size:12px}
+.proto{font:500 11px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:#f0b35a;border:1px solid #4a3a1e;padding:4px 8px;border-radius:5px}
+.view{padding-block:24px 48px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px;max-width:1240px;width:100%}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.head h1{margin:0;font:700 24px/1.2 var(--f-sign);text-wrap:balance}
+.head p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+a.btn{text-decoration:none;color:var(--ink)}
+.btn:hover{border-color:var(--muted)}
+.btn.primary,a.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{background:var(--sunk);color:var(--ink)}
+.btn.sm{padding:4px 8px;font-size:12px}
+.btn.danger{color:var(--bad)}
+.chip{border:1px solid var(--line);background:var(--surface);padding:5px 11px;border-radius:99px;cursor:pointer;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.panel,.tile,.card,.plan{background:var(--glass)!important;border-color:var(--glass-line)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 1px 2px rgba(16,30,28,.04),0 8px 24px rgba(16,30,28,.05)}
+.plan.cur{border-color:var(--accent)!important}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.panel-h{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);gap:8px}
+.panel-h h2{margin:0;font-size:14px;font-weight:600}
+.panel-b{padding:16px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.tile .k{color:var(--muted);font-size:12px}
+.tile .v{font:700 28px/1.2 var(--f-sign);font-variant-numeric:tabular-nums;margin-top:4px}
+.tile .s{font-size:12px;color:var(--muted)}
+.meter{height:6px;background:var(--sunk);border-radius:3px;overflow:hidden;margin-top:8px}
+.meter i{display:block;height:100%;background:var(--accent)}
+.meter.full i{background:var(--warn)}
+.grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.grid2>*{min-width:0}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 9px;border-radius:99px;font-weight:500}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.on{color:var(--good);background:var(--good-soft)}
+.pill.off{color:var(--bad);background:var(--bad-soft)}
+.pill.trial{color:var(--warn);background:var(--warn-soft)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-weight:500;color:var(--muted);font-size:12px;padding:10px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td .sub{display:block;color:var(--muted);font-size:12px}
+.num{font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:13px}
+.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
+.list li:last-child{border-bottom:0}
+.list .when{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+.empty{color:var(--muted);padding:16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.card .meta{padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.card .meta b{font-weight:600}
+.card .meta span{color:var(--muted);font-size:12px}
+.card .acts{display:flex;gap:6px;padding:0 12px 12px;margin-top:auto}
+.kind{font:500 11px var(--f-mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.split{display:grid;grid-template-columns:260px 1fr;gap:16px}
+.split>*{min-width:0}
+.pl-list button{display:block;width:100%;text-align:left;border:0;background:none;padding:10px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.pl-list button:last-child{border-bottom:0}
+.pl-list button[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.pl-list small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.pl-item{display:grid;grid-template-columns:28px 120px 1fr auto;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
+.pl-item .idx{font:500 12px var(--f-mono);color:var(--muted)}
+.pl-item input{width:64px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;color:var(--muted);font-weight:500}
+.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:7px;padding:8px 10px;background:var(--surface);width:100%}
+.field textarea{min-height:110px;font-family:var(--f-mono);font-size:12px}
+.field .hint{font-size:12px;color:var(--muted)}
+.err{color:var(--bad);font-size:13px}
+.form{display:grid;gap:12px}
+/* week grid */
+.week{display:grid;grid-template-columns:44px repeat(7,minmax(70px,1fr));min-width:620px}
+.week .dh{font-size:12px;color:var(--muted);text-align:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.week .hours{position:relative}
+.week .hours div{height:28px;font:11px var(--f-mono);color:var(--muted);text-align:right;padding-right:6px;transform:translateY(-7px)}
+.week .day{position:relative;border-left:1px solid var(--line);background:repeating-linear-gradient(to bottom,transparent 0 27px,var(--line) 27px 28px)}
+.blk{position:absolute;left:3px;right:3px;border-radius:5px;padding:3px 6px;font-size:11px;line-height:1.3;overflow:hidden;color:var(--ink);border-left:3px solid}
+.c0{background:color-mix(in srgb,#0d6b63 18%,var(--surface));border-color:#0d6b63}
+.c1{background:color-mix(in srgb,#b8611d 18%,var(--surface));border-color:#b8611d}
+.c2{background:color-mix(in srgb,#5a54b8 18%,var(--surface));border-color:#5a54b8}
+.c3{background:color-mix(in srgb,#2f7ab0 18%,var(--surface));border-color:#2f7ab0}
+.c4{background:color-mix(in srgb,#9a3d74 18%,var(--surface));border-color:#9a3d74}
+.days{display:flex;gap:4px;flex-wrap:wrap}
+.days label{display:flex;align-items:center;gap:4px;font-size:13px;border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+/* plans */
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.plan{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.plan.cur{border:2px solid var(--accent)}
+.plan h3{margin:0;font:700 18px var(--f-sign)}
+.plan .price{font:700 30px var(--f-sign);font-variant-numeric:tabular-nums}
+.plan .price small{font:400 13px var(--f-ui);color:var(--muted)}
+.plan ul{margin:0;padding-left:18px;color:var(--muted);font-size:13px}
+.plan .total{font-size:13px;border-top:1px solid var(--line);padding-top:10px;margin-top:auto}
+input[type=range]{width:100%;accent-color:var(--accent)}
+/* modal & toast */
+.scrim{position:fixed;inset:0;background:rgba(10,18,17,.55);display:grid;place-items:center;padding:16px;z-index:50}
+.modal{background:var(--surface);border-radius:12px;width:min(560px,100%);max-height:calc(100% - 32px);overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal.wide{width:min(1000px,100%)}
+.modal-h{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.modal-h h2{margin:0;font:700 18px var(--f-sign)}
+.modal-b{padding:20px}
+.modal-f{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--line)}
+.ed{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+.ed>*{min-width:0}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;z-index:60;font-size:13px}
+/* player */
+.player{position:fixed;inset:0;background:#050807;z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px}
+.player .stage{border-radius:6px;box-shadow:0 0 0 10px #1b1f1e,0 0 0 11px #2e3433;flex:none}
+.player-bar{display:flex;gap:10px;align-items:center;color:#cfd8d6;font-size:13px;flex-wrap:wrap;justify-content:center}
+.player-bar .btn{background:#1b2321;border-color:#2e3836;color:#e7efed}
+.prog{width:min(100%,640px);height:3px;background:#1d2524;border-radius:2px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:#3cc2b3}
+
+/* ===== Slides: what screens show. Fixed colors are content, not theme. ===== */
+.stage{position:relative;aspect-ratio:16/9;max-width:100%;container-type:inline-size;overflow:hidden;background:#000}
+.frame{aspect-ratio:16/9;background:var(--sunk);display:grid;place-items:center;overflow:hidden;border-bottom:1px solid var(--line);max-width:100%}
+.frame.big{aspect-ratio:4/3;border:1px solid var(--line);border-radius:8px}
+.frame>.stage.tall{height:100%;width:auto}
+.frame>.stage.wide{width:100%;height:auto}
+.fmt{font:500 11px var(--f-mono);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 5px;white-space:nowrap}
+.sl.sl-lay{padding:0;display:grid;gap:.3cqw;background:#000}
+.zone{position:relative;overflow:hidden;background:#232b2a;display:grid;place-items:center;color:#9aa8a5;font:500 2.2cqw/1.2 var(--f-ui);text-align:center;padding:1cqw;border:.25cqw dashed #4a5654}
+.zone.has{border:0;padding:0;background:#000}
+.zone img,.zone video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.zone.contain img,.zone.contain video{object-fit:contain}
+.pickable .zone{cursor:pointer}
+.pickable .zone:hover{outline:3px solid #3cc2b3;outline-offset:-3px}
+.zl{position:absolute;left:1cqw;top:1cqw;background:rgba(0,0,0,.6);color:#fff;font:600 2cqw var(--f-mono);padding:.2cqw .8cqw;border-radius:.6cqw;z-index:1}
+.zrow{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.zrow .zk{font:600 13px var(--f-mono);background:var(--sunk);border-radius:5px;text-align:center;padding:2px 0}
+.lays{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.lays button{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:6px;cursor:pointer;display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--muted);align-items:center}
+.lays button[aria-pressed="true"]{border:2px solid var(--accent);color:var(--ink)}
+.mini{display:grid;gap:2px;width:100%;max-height:60px;margin:auto}
+.mini i{background:var(--accent-soft);border:1px solid var(--accent);border-radius:2px}
+.code{font:12px/1.6 var(--f-mono);background:var(--sunk);padding:12px 14px;border-radius:8px;overflow-x:auto;white-space:pre;margin:0;max-width:100%}
+.code-wrap{position:relative;min-width:0}
+.mth{font:600 11px var(--f-mono);padding:2px 6px;border-radius:4px;background:var(--accent-soft);color:var(--accent)}
+.mth.post,.mth.put{background:var(--warn-soft);color:var(--warn)}
+.st-ok{color:var(--good);font:500 12px var(--f-mono)}
+.st-bad{color:var(--bad);font:500 12px var(--f-mono)}
+.flash{animation:flash 1s ease-out}
+@keyframes flash{from{box-shadow:0 0 0 4px #3cc2b3}to{box-shadow:0 0 0 0 transparent}}
+.sl{position:absolute;inset:0;background:var(--sbg);color:var(--sfg);font-family:var(--f-sign);padding:5cqw 6cqw;display:flex;flex-direction:column}
+.sl h2{font-size:6cqw;line-height:1;margin:0 0 3cqw;font-weight:800;letter-spacing:-.01em}
+.sl-menu ul{list-style:none;margin:0;padding:0;columns:2;column-gap:6cqw}
+.sl-menu li{display:flex;justify-content:space-between;gap:2cqw;font-size:2.9cqw;font-weight:500;padding:1.1cqw 0;border-bottom:.2cqw dotted color-mix(in srgb,var(--sfg) 40%,transparent);break-inside:avoid}
+.sl-menu li b{color:var(--sac);font-weight:700}
+.sl-foot{margin-top:auto;font-size:2.2cqw;opacity:.8}
+.sl-promo{justify-content:center}
+.sl-promo h2{font-size:9.5cqw;max-width:70%;text-wrap:balance}
+.sl-promo p{font-size:3.2cqw;margin:0;font-weight:500;max-width:60%}
+.sl-promo .tag{position:absolute;right:7cqw;top:50%;transform:translateY(-50%) rotate(-8deg);width:22cqw;height:22cqw;border-radius:50%;background:var(--sac);color:var(--sbg);display:grid;place-items:center;font-size:6cqw;font-weight:800}
+.sl-welcome h2{font-size:7.5cqw;max-width:80%;margin-top:4cqw;text-wrap:balance}
+.sl-welcome p{font-size:2.8cqw;margin:0;opacity:.85;font-family:var(--f-ui)}
+.sl-strip{margin-top:auto;display:flex;gap:4cqw;align-items:baseline;border-top:.3cqw solid var(--sac);padding-top:2cqw}
+.sl-strip .t{font:500 5cqw var(--f-mono)}
+.sl-strip .w{font-size:2.6cqw;font-family:var(--f-ui)}
+.sl-kpi .ks{display:grid;grid-template-columns:repeat(3,1fr);gap:3cqw;flex:1}
+.sl-kpi .kk{background:color-mix(in srgb,var(--sfg) 6%,transparent);border-radius:1.2cqw;padding:3cqw;display:flex;flex-direction:column;gap:1cqw}
+.sl-kpi .kl{font-size:2.2cqw;font-family:var(--f-ui);opacity:.75}
+.sl-kpi .kv{font-size:7cqw;font-weight:800;line-height:1}
+.sl-kpi .kb{margin-top:auto;height:1.2cqw;background:color-mix(in srgb,var(--sfg) 12%,transparent);border-radius:1cqw;overflow:hidden}
+.sl-kpi .kb i{display:block;height:100%;background:var(--sac)}
+.sl-kpi .kt{font-size:1.8cqw;font-family:var(--f-ui);opacity:.7}
+.sl-news ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2cqw}
+.sl-news li{font-size:3.4cqw;font-weight:600;padding-left:3cqw;border-left:.8cqw solid var(--sac);line-height:1.15}
+.sl-tick{position:absolute;left:0;right:0;bottom:0;background:var(--sac);color:var(--sbg);font-size:2.4cqw;font-weight:700;padding:1.4cqw 0;white-space:nowrap;overflow:hidden}
+.sl-tick span{display:inline-block;padding-left:100%;animation:tick 18s linear infinite}
+@keyframes tick{to{transform:translateX(-100%)}}
+.sl-cal .ev{display:grid;grid-template-columns:14cqw 1fr auto;gap:3cqw;align-items:baseline;padding:2cqw 0;border-bottom:.2cqw solid color-mix(in srgb,var(--sfg) 20%,transparent);font-size:3.2cqw}
+.sl-cal .ev .tm{font:500 3.2cqw var(--f-mono);color:var(--sac)}
+.sl-cal .ev .rm{font-size:2.4cqw;opacity:.75;font-family:var(--f-ui)}
+.sl-clock{align-items:center;justify-content:center;text-align:center;gap:1cqw}
+.sl-clock .big{font:500 17cqw/1 var(--f-mono);letter-spacing:-.02em}
+.sl-clock .dt{font-size:3.4cqw;font-weight:700;color:var(--sac)}
+.sl-clock .w{font-size:2.6cqw;font-family:var(--f-ui);opacity:.8;margin-top:2cqw}
+.sl-img{padding:0}
+.sl-img img{width:100%;height:100%;object-fit:cover;display:block}
+@media (prefers-reduced-motion:reduce){.sl-tick span{animation:none;padding-left:3cqw}}
+
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:8px max(16px,env(safe-area-inset-left,0px));border-right:0;border-bottom:1px solid var(--glass-line);align-items:center}
+  .brand small,.nav-label,.side-foot,.proto{display:none}
+  .top{padding-left:max(16px,env(safe-area-inset-left,0px))}
+  .nav{display:flex;gap:2px}
+  .nav a{white-space:nowrap}
+  .nav a .count{display:none}
+  .grid2,.split,.ed{grid-template-columns:1fr}
+  .top,.view{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .pl-item{grid-template-columns:24px 88px 1fr;}
+  .pl-item .ctl{grid-column:2 / -1}
+}
+</style>
+
+<header class="top">
+  <div class="brand"><div class="brand-mark">S</div><div><b>Signboard</b><small>Working name</small></div></div>
+  <div class="row" style="gap:16px">
+    <span class="proto">Prototype · sample data</span>
+    <div class="tenant"><div class="av">HC</div><div><b id="tName">Harbor Coffee Co.</b><span id="tPlan"></span></div></div>
+  </div>
+</header>
+<div class="app">
+  <aside class="side">
+    <nav class="nav" id="nav" aria-label="Sections"></nav>
+    <div class="side-foot">Prototype with sample data. Nothing you change here is saved after you reload.</div>
+  </aside>
+  <div class="main">
+    <main class="view" id="view"></main>
+  </div>
+</div>
+<div id="layer"></div>
+
+<script>
+const PLANS={
+  starter:{name:'Starter',price:12,feats:['Content library and playlists','Basic scheduling','Clock and weather widgets','Email support']},
+  business:{name:'Business',price:18,feats:['Everything in Starter','All templates and live-data widgets','Screen groups and day-part schedules','Emergency override']},
+  enterprise:{name:'Enterprise',price:28,feats:['Everything in Business','Approvals and audit log','Proof-of-play analytics','SSO and priority support']}
+};
+const S={
+  tenant:{name:'Harbor Coffee Co.',plan:'business',limit:10},
+  groups:['Front counter','Lobby','Window','Back office'],
+  content:[
+    {id:'c1',name:'Morning menu board',kind:'menu',dur:15,d:{title:'Morning menu',items:[['Flat white','4.20'],['Cappuccino','4.20'],['Cold brew','4.80'],['Almond croissant','3.90'],['Avocado toast','8.50'],['Overnight oats','5.20']],note:'Oat milk at no extra charge',bg:'#1d2b26',fg:'#f3ead8',accent:'#e3a857'}},
+    {id:'c2',name:'Pumpkin spice promo',kind:'promo',dur:10,d:{title:'Pumpkin spice is back',sub:'Every latte, all of November',tag:'$4.90',bg:'#c2541b',fg:'#fff6ec',accent:'#2b1a10'}},
+    {id:'c3',name:'Lobby welcome',kind:'welcome',dur:12,d:{title:'Welcome to Harbor Coffee',sub:'Free Wi-Fi: HarborGuest · Ask us about catering',weather:'18°C, light rain',bg:'#0f3b4c',fg:'#eaf6f8',accent:'#7fd1e0'}},
+    {id:'c4',name:'Store KPIs',kind:'kpi',dur:15,d:{title:'Today at Pier St',kpis:[['Orders','412','75'],['Average wait','3m 40s','60'],['Rating','4.8','96']],bg:'#f2f2ee',fg:'#1b1f1d',accent:'#2f7d5b'}},
+    {id:'c5',name:'Team announcements',kind:'news',dur:15,d:{title:'Team news',items:['Holiday rota is up in the back office','New oat milk supplier from 4 November','Welcome Priya to the Pier St team'],ticker:'Clean the grinder at the end of every closing shift',bg:'#ffffff',fg:'#1a1a1a',accent:'#c2541b'}},
+    {id:'c6',name:'Catering orders today',kind:'calendar',dur:12,d:{title:'Catering today',events:[['10:30','Brightline Studio','40 cups'],['12:00','City Library','25 sandwiches'],['15:00','Harbor Dental','12 pastries']],bg:'#22223a',fg:'#f1f0ff',accent:'#ffcf5c'}},
+    {id:'c7',name:'Clock and weather',kind:'clock',dur:8,d:{city:'Pier St',weather:'18°C, light rain',bg:'#111413',fg:'#ffffff',accent:'#e3a857'}}
+  ],
+  playlists:[
+    {id:'p1',name:'Morning menu',items:[{c:'c1',dur:15},{c:'c2',dur:10},{c:'c7',dur:8}]},
+    {id:'p2',name:'Lobby loop',items:[{c:'c3',dur:12},{c:'c2',dur:10},{c:'c7',dur:8}]},
+    {id:'p3',name:'Back office board',items:[{c:'c4',dur:15},{c:'c5',dur:15},{c:'c6',dur:12}]},
+    {id:'p4',name:'Afternoon menu',items:[{c:'c2',dur:10},{c:'c1',dur:15}]}
+  ],
+  screens:[
+    {id:'s1',name:'Counter menu left',group:'Front counter',site:'Pier St',status:'on',seen:'just now',pl:'p1'},
+    {id:'s2',name:'Counter menu right',group:'Front counter',site:'Pier St',status:'on',seen:'just now',pl:'p1'},
+    {id:'s3',name:'Lobby TV',group:'Lobby',site:'Pier St',status:'on',seen:'1 min ago',pl:'p2'},
+    {id:'s4',name:'Window display',group:'Window',site:'Pier St',status:'off',seen:'Yesterday 21:14',pl:'p2'},
+    {id:'s5',name:'Kitchen board',group:'Back office',site:'Pier St',status:'on',seen:'just now',pl:'p3'},
+    {id:'s6',name:'Counter menu',group:'Front counter',site:'Old Town',status:'on',seen:'2 min ago',pl:'p1'},
+    {id:'s7',name:'Lobby TV',group:'Lobby',site:'Old Town',status:'on',seen:'just now',pl:'p2'},
+    {id:'s8',name:'Staff room',group:'Back office',site:'Old Town',status:'on',seen:'just now',pl:'p3'}
+  ],
+  schedules:[
+    {id:'r1',group:'Front counter',pl:'p1',days:[0,1,2,3,4,5,6],start:6,end:11},
+    {id:'r2',group:'Front counter',pl:'p4',days:[0,1,2,3,4,5,6],start:11,end:19},
+    {id:'r3',group:'Window',pl:'p2',days:[0,1,2,3,4,5,6],start:7,end:21},
+    {id:'r4',group:'Back office',pl:'p3',days:[0,1,2,3,4],start:6,end:18},
+    {id:'r5',group:'Lobby',pl:'p2',days:[5,6],start:8,end:20}
+  ],
+  activity:[
+    ['Maya Cruz','scheduled Afternoon menu on Front counter','10 min ago'],
+    ['System','Window display went offline','Yesterday 21:14'],
+    ['Leo Tan','updated Pumpkin spice promo','Yesterday 16:02'],
+    ['Maya Cruz','paired Kitchen board','Mon 09:40']
+  ],
+  customers:[
+    ['Harbor Coffee Co.','Cafés','business',8,10,'Active'],
+    ['Northside Dental','Clinics','starter',3,5,'Active'],
+    ['Kestrel Fitness','Gyms','business',14,20,'Active'],
+    ['Mapleton Library','Education','starter',4,4,'Active'],
+    ['Brightline Studio','Offices','enterprise',32,40,'Active'],
+    ['Grand Pier Hotel','Hotels','business',22,25,'Trial']
+  ]
+};
+const TEMPLATES=[
+  {name:'Café menu board',ind:'Restaurants and cafés',kind:'menu',d:{title:'Lunch menu',items:[['Chicken laksa','12.50'],['Veggie bowl','10.90'],['Soup of the day','7.50'],['Iced tea','3.80']],note:'Ask about gluten-free options',bg:'#1d2b26',fg:'#f3ead8',accent:'#e3a857'}},
+  {name:'Retail promotion',ind:'Retail',kind:'promo',d:{title:'Weekend sale',sub:'Up to 40% off outerwear',tag:'-40%',bg:'#111827',fg:'#ffffff',accent:'#f9d648'}},
+  {name:'Office welcome',ind:'Offices',kind:'welcome',d:{title:'Welcome, visitors from Acme',sub:'Please sign in at reception · Wi-Fi: Guest',weather:'21°C, sunny',bg:'#f4f1fb',fg:'#221c3a',accent:'#6b4fd8'}},
+  {name:'Team KPIs',ind:'Offices',kind:'kpi',d:{title:'Sales this week',kpis:[['New deals','27','68'],['Revenue','$84k','81'],['NPS','62','77']],bg:'#0e1a2b',fg:'#eaf2ff',accent:'#4fa3ff'}},
+  {name:'Class timetable',ind:'Gyms and schools',kind:'calendar',d:{title:'Classes today',events:[['07:00','Spin','Studio 1'],['12:15','Yoga flow','Studio 2'],['18:30','HIIT','Main floor']],bg:'#14281d',fg:'#effaf2',accent:'#7ee2a8'}},
+  {name:'Clinic notice board',ind:'Clinics',kind:'news',d:{title:'Patient notices',items:['Flu vaccines available, walk-ins welcome','Please wear a mask if you have a cough','Late on Thursdays until 8 pm'],ticker:'Please tell reception if your details have changed',bg:'#f5fbff',fg:'#0f2a3d',accent:'#1b7fc4'}},
+  {name:'Hotel lobby welcome',ind:'Hotels',kind:'welcome',d:{title:'Welcome to the Grand Pier',sub:'Breakfast 6:30 to 10:30 in the Harbour Room',weather:'24°C, clear',bg:'#2a1f17',fg:'#f7efe4',accent:'#d4a65a'}},
+  {name:'Clock and weather',ind:'Any business',kind:'clock',d:{city:'Head office',weather:'20°C, partly cloudy',bg:'#111413',fg:'#ffffff',accent:'#3cc2b3'}}
+];
+const FIELDS={
+  menu:[['title','Heading'],['items','Menu items, one per line: Name | Price','lines',2],['note','Footer note']],
+  promo:[['title','Headline'],['sub','Supporting line'],['tag','Price or badge']],
+  welcome:[['title','Welcome message'],['sub','Second line'],['weather','Weather (live in the real product)']],
+  kpi:[['title','Heading'],['kpis','KPIs, one per line: Label | Value | Progress %','lines',3]],
+  news:[['title','Heading'],['items','Announcements, one per line','lines',1],['ticker','Scrolling ticker']],
+  calendar:[['title','Heading'],['events','Events, one per line: Time | Name | Detail','lines',3]],
+  clock:[['city','Location'],['weather','Weather (live in the real product)']]
+};
+const KIND_LABEL={menu:'Menu',promo:'Promotion',welcome:'Welcome',kpi:'KPIs',news:'Announcements',calendar:'Calendar',clock:'Clock and weather',image:'Image'};
+KIND_LABEL.layout='Media layout';
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const FORMATS={
+  land:{n:'Landscape',r:[16,9],px:'1920 × 1080'},
+  port:{n:'Portrait',r:[9,16],px:'1080 × 1920'},
+  ultra:{n:'Ultrawide',r:[32,9],px:'3840 × 1080'},
+  square:{n:'Square',r:[1,1],px:'1080 × 1080'},
+  strip:{n:'Shelf strip',r:[4,1],px:'1920 × 480'}
+};
+const LAYOUTS={
+  land:[{id:'full',n:'Full screen',c:'1fr',r:'1fr',a:'"a"'},{id:'main-side',n:'Main + side',c:'2fr 1fr',r:'1fr 1fr',a:'"a b" "a c"'},{id:'grid4',n:'2 × 2 grid',c:'1fr 1fr',r:'1fr 1fr',a:'"a b" "c d"'},{id:'banner',n:'Main + banner',c:'1fr',r:'4fr 1fr',a:'"a" "b"'}],
+  port:[{id:'full',n:'Full screen',c:'1fr',r:'1fr',a:'"a"'},{id:'halves',n:'Top + bottom',c:'1fr',r:'1fr 1fr',a:'"a" "b"'},{id:'hero3',n:'Hero + two',c:'1fr 1fr',r:'2fr 1fr',a:'"a a" "b c"'}],
+  ultra:[{id:'full',n:'Full width',c:'1fr',r:'1fr',a:'"a"'},{id:'three',n:'Three panels',c:'1fr 1fr 1fr',r:'1fr',a:'"a b c"'},{id:'main2',n:'Main + two',c:'2fr 1fr 1fr',r:'1fr',a:'"a b c"'}],
+  square:[{id:'full',n:'Full screen',c:'1fr',r:'1fr',a:'"a"'},{id:'grid4',n:'2 × 2 grid',c:'1fr 1fr',r:'1fr 1fr',a:'"a b" "c d"'}],
+  strip:[{id:'full',n:'Full strip',c:'1fr',r:'1fr',a:'"a"'},{id:'two',n:'Two halves',c:'1fr 1fr',r:'1fr',a:'"a b"'},{id:'three',n:'Three parts',c:'1fr 1fr 1fr',r:'1fr',a:'"a b c"'}]
+};
+const LAY=(f,id)=>LAYOUTS[f].find(l=>l.id===id)||LAYOUTS[f][0];
+const zonesOf=l=>[...new Set(l.a.replace(/[^a-z]/g,''))];
+const fmtOf=c=>c?.kind==='layout'?c.fmt:'land';
+const ratio=f=>FORMATS[f].r[0]/FORMATS[f].r[1];
+function genImg(w,h,c1,c2,label){
+  try{const cv=document.createElement('canvas');cv.width=w;cv.height=h;const x=cv.getContext('2d');
+    const g=x.createLinearGradient(0,0,w,h);g.addColorStop(0,c1);g.addColorStop(1,c2);x.fillStyle=g;x.fillRect(0,0,w,h);
+    x.fillStyle='rgba(255,255,255,.14)';for(let i=0;i<6;i++){x.beginPath();x.arc(w*(.15+i*.16),h*(.3+(i%2)*.4),Math.min(w,h)*(.12+(i%3)*.05),0,7);x.fill();}
+    x.fillStyle='#fff';x.font=`800 ${Math.round(Math.min(w,h)*.11)}px Archivo, Arial, sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(label,w/2,h/2);
+    return cv.toDataURL('image/jpeg',.8);}catch(e){return '';}
+}
+const Z=(src,type='image',fit='cover')=>({src,type,fit});
+S.content.push(
+  {id:'c8',name:'Window poster',kind:'layout',fmt:'port',lay:'halves',dur:10,zones:{a:Z(genImg(540,480,'#c2541b','#7a2a0a','Autumn blend')),b:Z(genImg(540,480,'#1d2b26','#3d5a4f','Open 6am–7pm'))}},
+  {id:'c9',name:'Lobby photo wall',kind:'layout',fmt:'land',lay:'main-side',dur:10,zones:{a:Z(genImg(960,720,'#0f3b4c','#2f7ab0','Our roastery')),b:Z(genImg(480,360,'#7a3f17','#c98a4b','Single origin')),c:Z(genImg(480,360,'#2f7d5b','#9bd1b3','Catering'))}}
+);
+S.playlists.find(p=>p.id==='p2').items.splice(1,0,{c:'c9',dur:10});
+S.playlists.push({id:'p5',name:'Window posters',items:[{c:'c8',dur:10}]});
+S.screens.forEach(s=>s.fmt='land');
+S.screens.find(s=>s.id==='s4').fmt='port';S.screens.find(s=>s.id==='s4').pl='p5';
+S.schedules.find(r=>r.id==='r3').pl='p5';
+S.feeds={'store-kpis':'c4'};
+S.apilog=[['09:02:11','POST','/v1/feeds/store-kpis',200,'from POS system'],['08:40:03','GET','/v1/screens/s1/now-playing',200,'']];
+let uid=100; const nid=p=>p+(uid++);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=(s,r=document)=>r.querySelector(s);
+const C=id=>S.content.find(c=>c.id===id);
+const P=id=>S.playlists.find(p=>p.id===id);
+const hhmm=()=>new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+const today=()=>new Date().toLocaleDateString([], {weekday:'long',day:'numeric',month:'long'});
+
+function slide(c){
+  if(!c) return '<div class="sl" style="--sbg:#111;--sfg:#888"><p>Missing content</p></div>';
+  if(c.kind==='layout') return layoutSlide(c,false);
+  const d=c.d, st=`style="--sbg:${esc(d.bg)};--sfg:${esc(d.fg)};--sac:${esc(d.accent)}"`;
+  switch(c.kind){
+    case 'menu': return `<div class="sl sl-menu" ${st}><h2>${esc(d.title)}</h2><ul>${d.items.map(i=>`<li><span>${esc(i[0])}</span><b>${esc(i[1])}</b></li>`).join('')}</ul><div class="sl-foot">${esc(d.note)}</div></div>`;
+    case 'promo': return `<div class="sl sl-promo" ${st}><h2>${esc(d.title)}</h2><p>${esc(d.sub)}</p>${d.tag?`<div class="tag">${esc(d.tag)}</div>`:''}</div>`;
+    case 'welcome': return `<div class="sl sl-welcome" ${st}><h2>${esc(d.title)}</h2><p>${esc(d.sub)}</p><div class="sl-strip"><span class="t" data-clock>${hhmm()}</span><span class="w">${esc(d.weather)}</span></div></div>`;
+    case 'kpi': return `<div class="sl sl-kpi" ${st}><h2>${esc(d.title)}</h2><div class="ks">${d.kpis.map(k=>`<div class="kk"><span class="kl">${esc(k[0])}</span><span class="kv">${esc(k[1])}</span><div class="kb"><i style="width:${Math.min(100,+k[2]||0)}%"></i></div><span class="kt">${esc(k[2])}% of target</span></div>`).join('')}</div></div>`;
+    case 'news': return `<div class="sl sl-news" ${st}><h2>${esc(d.title)}</h2><ol>${d.items.map(i=>`<li>${esc(i)}</li>`).join('')}</ol>${d.ticker?`<div class="sl-tick"><span>${esc(d.ticker)}</span></div>`:''}</div>`;
+    case 'calendar': return `<div class="sl sl-cal" ${st}><h2>${esc(d.title)}</h2>${d.events.map(e=>`<div class="ev"><span class="tm">${esc(e[0])}</span><span>${esc(e[1])}</span><span class="rm">${esc(e[2])}</span></div>`).join('')}</div>`;
+    case 'clock': return `<div class="sl sl-clock" ${st}><div class="big" data-clock>${hhmm()}</div><div class="dt" data-date>${today()}</div><div class="w">${esc(d.city)} · ${esc(d.weather)}</div></div>`;
+    case 'image': return `<div class="sl sl-img" style="--sbg:#000;--sfg:#fff"><img src="${d.src}" alt="${esc(c.name)}"></div>`;
+    case 'layout': return layoutSlide(c,false);
+  }
+}
+function layoutSlide(c,edit){
+  const l=LAY(c.fmt,c.lay);
+  return `<div class="sl sl-lay" style="--sbg:#000;--sfg:#fff;grid-template-columns:${l.c};grid-template-rows:${l.r};grid-template-areas:${l.a.replace(/"/g,"'")}">${zonesOf(l).map(z=>{const m=c.zones[z];
+    return `<div class="zone ${m?'has':''} ${m?.fit==='contain'?'contain':''}" data-z="${z}" style="grid-area:${z}">${edit?`<span class="zl">${z.toUpperCase()}</span>`:''}${m?(m.type==='video'?`<video src="${m.src}" muted autoplay loop playsinline></video>`:`<img src="${m.src}" alt="">`):(edit?'Click to add an image or video':'Empty zone')}</div>`}).join('')}</div>`;
+}
+const stage=(c,frame)=>{const f=fmtOf(c),r=ratio(f),[w,h]=FORMATS[f].r;
+  const st=`<div class="stage ${r<16/9?'tall':'wide'}" style="aspect-ratio:${w}/${h}">${slide(c)}</div>`;
+  return frame?`<div class="frame ${frame===2?'big':''}">${st}</div>`:st;};
+setInterval(()=>{document.querySelectorAll('[data-clock]').forEach(e=>e.textContent=hhmm());document.querySelectorAll('[data-date]').forEach(e=>e.textContent=today());},10000);
+
+function nowPl(s){
+  const now=new Date(), day=(now.getDay()+6)%7, h=now.getHours();
+  const r=S.schedules.find(r=>r.group===s.group&&r.days.includes(day)&&h>=r.start&&h<r.end);
+  return r?r.pl:s.pl;
+}
+const plUse=cid=>S.playlists.filter(p=>p.items.some(i=>i.c===cid)).length;
+const plDur=p=>p.items.reduce((a,i)=>a+(+i.dur||0),0);
+const fmtDur=s=>s>=60?`${Math.floor(s/60)}m ${s%60}s`:`${s}s`;
+
+/* ---------- views ---------- */
+const VIEWS={
+  dashboard:{label:'Overview',render(){
+    const on=S.screens.filter(s=>s.status==='on').length, off=S.screens.filter(s=>s.status==='off');
+    const used=S.screens.length, lim=S.tenant.limit, pct=Math.round(used/lim*100);
+    return `<div class="head"><div><h1>Good morning, Maya</h1><p>${on} of ${used} screens are playing. Here is what is on them right now.</p></div><div class="row"><a class="btn" href="#templates">New from template</a><button class="btn primary" data-act="pair">Pair a screen</button></div></div>
+    <div class="tiles">
+      <div class="tile"><div class="k">Screens online</div><div class="v">${on} / ${used}</div><div class="s">${off.length} offline</div></div>
+      <div class="tile"><div class="k">Screens on your plan</div><div class="v">${used} / ${lim}</div><div class="meter ${pct>=100?'full':''}"><i style="width:${Math.min(100,pct)}%"></i></div></div>
+      <div class="tile"><div class="k">Content items</div><div class="v">${S.content.length}</div><div class="s">${S.playlists.length} playlists</div></div>
+      <div class="tile"><div class="k">Active schedules</div><div class="v">${S.schedules.length}</div><div class="s">across ${new Set(S.schedules.map(r=>r.group)).size} groups</div></div>
+    </div>
+    <div class="grid2">
+      <section class="panel"><div class="panel-h"><h2>Playing now</h2><a class="btn ghost sm" href="#screens">All screens</a></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Screen</th><th>Playlist</th><th>Status</th><th></th></tr></thead><tbody>
+        ${S.screens.slice(0,6).map(s=>{const p=P(nowPl(s));return `<tr><td>${esc(s.name)}<span class="sub">${esc(s.site)} · ${esc(s.group)}</span></td><td>${esc(p?.name||'Nothing')}</td><td><span class="pill ${s.status}">${s.status==='on'?'Online':'Offline'}</span></td><td><button class="btn sm" data-act="preview" data-s="${s.id}">Preview</button></td></tr>`}).join('')}
+        </tbody></table></div></section>
+      <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+        <section class="panel"><div class="panel-h"><h2>Needs attention</h2></div>
+          ${off.length?`<ul class="list">${off.map(s=>`<li><span class="pill off">Offline</span><span>${esc(s.name)}<span class="sub" style="display:block;color:var(--muted);font-size:12px">${esc(s.site)} · last seen ${esc(s.seen)}</span></span></li>`).join('')}</ul>`:'<p class="empty">All screens are online.</p>'}
+        </section>
+        <section class="panel"><div class="panel-h"><h2>Recent activity</h2></div>
+          <ul class="list">${S.activity.map(a=>`<li><span><b style="font-weight:600">${esc(a[0])}</b> ${esc(a[1])}</span><span class="when">${esc(a[2])}</span></li>`).join('')}</ul>
+        </section>
+      </div>
+    </div>`;
+  }},
+  screens:{label:'Screens',count:()=>S.screens.length,f:'All',render(){
+    const f=this.f, list=S.screens.filter(s=>f==='All'||s.group===f);
+    return `<div class="head"><div><h1>Screens</h1><p>Each TV runs the player app. Pair it with the code it shows, then choose its group and default playlist. Schedules on the group override the default.</p></div><button class="btn primary" data-act="pair">Pair a screen</button></div>
+    <div class="row">${['All',...S.groups].map(g=>`<button class="chip" aria-pressed="${g===f}" data-act="sf" data-v="${esc(g)}">${esc(g)}</button>`).join('')}</div>
+    <section class="panel tbl-wrap"><table><thead><tr><th>Screen</th><th>Group</th><th>Size</th><th>Status</th><th>Default playlist</th><th>Playing now</th><th>Last seen</th><th></th></tr></thead><tbody>
+    ${list.map(s=>`<tr><td>${esc(s.name)}<span class="sub">${esc(s.site)}</span></td><td>${esc(s.group)}</td><td><span class="fmt">${FORMATS[s.fmt].n}</span></td><td><span class="pill ${s.status}">${s.status==='on'?'Online':'Offline'}</span></td>
+      <td><select aria-label="Default playlist for ${esc(s.name)}" data-act="setpl" data-s="${s.id}" style="border:1px solid var(--line);border-radius:6px;padding:4px 6px;background:var(--surface)">${S.playlists.map(p=>`<option value="${p.id}" ${p.id===s.pl?'selected':''}>${esc(p.name)}</option>`).join('')}</select></td>
+      <td>${esc(P(nowPl(s))?.name||'')}</td><td class="num">${esc(s.seen)}</td><td><div class="row" style="flex-wrap:nowrap"><button class="btn sm" data-act="preview" data-s="${s.id}">Preview</button><button class="btn sm ghost danger" data-act="unpair" data-s="${s.id}">Remove</button></div></td></tr>`).join('')||'<tr><td colspan="8" class="empty">No screens in this group yet.</td></tr>'}
+    </tbody></table></section>
+    <p style="color:var(--muted);font-size:13px;margin:0">${S.screens.length} of ${S.tenant.limit} screens used on the ${PLANS[S.tenant.plan].name} plan. <a href="#billing" style="color:var(--accent)">Change how many screens you pay for</a>.</p>`;
+  }},
+  content:{label:'Content',count:()=>S.content.length,render(){
+    return `<div class="head"><div><h1>Content</h1><p>Everything that can play on a screen. Upload images or video, lay them out for any screen size, or make slides from templates and edit them with a form.</p></div>
+      <div class="row"><label class="btn" for="up">Upload image or video</label><input id="up" type="file" accept="image/*,video/*" hidden><a class="btn primary" href="#templates">New from template</a></div></div>
+    <div class="cards">${S.content.map(c=>`<article class="card">${stage(c,1)}<div class="meta"><span class="row" style="gap:6px"><span class="kind">${KIND_LABEL[c.kind]}</span><span class="fmt">${FORMATS[fmtOf(c)].n}</span></span><b>${esc(c.name)}</b><span>${c.dur}s · in ${plUse(c.id)} playlist${plUse(c.id)===1?'':'s'}</span></div>
+      <div class="acts">${c.kind!=='image'?`<button class="btn sm" data-act="edit" data-c="${c.id}">Edit</button>`:''}<button class="btn sm" data-act="play1" data-c="${c.id}">Full screen</button><button class="btn sm ghost danger" data-act="delc" data-c="${c.id}">Delete</button></div></article>`).join('')}</div>`;
+  }},
+  playlists:{label:'Playlists',count:()=>S.playlists.length,sel:'p1',render(){
+    if(!P(this.sel)) this.sel=S.playlists[0]?.id;
+    const p=P(this.sel);
+    return `<div class="head"><div><h1>Playlists</h1><p>A playlist plays its items in order, then loops. Set how long each item stays on screen.</p></div><button class="btn primary" data-act="newpl">New playlist</button></div>
+    <div class="split">
+      <section class="panel pl-list">${S.playlists.map(x=>`<button data-act="selpl" data-p="${x.id}" aria-current="${x.id===this.sel}">${esc(x.name)}<small>${x.items.length} items · ${fmtDur(plDur(x))} loop</small></button>`).join('')}</section>
+      ${p?`<section class="panel"><div class="panel-h"><input id="plname" aria-label="Playlist name" value="${esc(p.name)}" style="font-weight:600;border:1px solid transparent;border-radius:6px;padding:4px 6px;background:transparent;min-width:0;flex:1"><div class="row"><span class="num" style="color:var(--muted)">${fmtDur(plDur(p))} loop</span><button class="btn sm primary" data-act="playpl">Preview</button></div></div>
+        ${p.items.map((it,i)=>{const c=C(it.c);return `<div class="pl-item"><span class="idx">${String(i+1).padStart(2,'0')}</span>${stage(c,1)}<div style="min-width:0"><b style="font-weight:600">${esc(c?.name)}</b><span style="display:block;color:var(--muted);font-size:12px">${KIND_LABEL[c?.kind]||''}</span></div>
+          <div class="row ctl"><input type="number" min="3" max="600" value="${it.dur}" aria-label="Seconds on screen" data-act="dur" data-i="${i}"><span style="color:var(--muted);font-size:12px">sec</span><button class="btn sm ghost" data-act="mv" data-i="${i}" data-d="-1" aria-label="Move up" ${i===0?'disabled':''}>↑</button><button class="btn sm ghost" data-act="mv" data-i="${i}" data-d="1" aria-label="Move down" ${i===p.items.length-1?'disabled':''}>↓</button><button class="btn sm ghost danger" data-act="rmit" data-i="${i}">Remove</button></div></div>`}).join('')||'<p class="empty">This playlist is empty. Add content below.</p>'}
+        <div class="panel-b row"><select id="addc" aria-label="Content to add" style="border:1px solid var(--line);border-radius:7px;padding:7px 10px;background:var(--surface);flex:1;min-width:0">${S.content.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select><button class="btn" data-act="additem">Add to playlist</button></div>
+      </section>`:'<p class="empty">No playlists yet.</p>'}
+    </div>`;
+  }},
+  schedules:{label:'Schedules',g:'Front counter',render(){
+    const g=this.g, rules=S.schedules.filter(r=>r.group===g), H0=6,H1=23, rows=H1-H0;
+    const ci=id=>S.playlists.findIndex(p=>p.id===id)%5;
+    const def=S.screens.find(s=>s.group===g);
+    return `<div class="head"><div><h1>Schedules</h1><p>Day-part rules for each screen group. Outside these times, each screen plays its default playlist.</p></div></div>
+    <div class="row">${S.groups.map(x=>`<button class="chip" aria-pressed="${x===g}" data-act="sg" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+    <section class="panel"><div class="panel-h"><h2>${esc(g)} · week view</h2><span style="color:var(--muted);font-size:12px">Default: ${esc(P(def?.pl)?.name||'none')}</span></div>
+      <div class="tbl-wrap"><div class="week"><div></div>${DAYS.map(d=>`<div class="dh">${d}</div>`).join('')}
+        <div class="hours">${Array.from({length:rows},(_,i)=>`<div>${String(H0+i).padStart(2,'0')}:00</div>`).join('')}</div>
+        ${DAYS.map((_,di)=>`<div class="day" style="height:${rows*28}px">${rules.filter(r=>r.days.includes(di)).map(r=>`<div class="blk c${ci(r.pl)}" style="top:${(Math.max(r.start,H0)-H0)*28}px;height:${(Math.min(r.end,H1)-Math.max(r.start,H0))*28-2}px">${esc(P(r.pl)?.name)}<br>${r.start}:00–${r.end}:00</div>`).join('')}</div>`).join('')}
+      </div></div></section>
+    <div class="grid2">
+      <section class="panel"><div class="panel-h"><h2>Rules for ${esc(g)}</h2></div>
+        ${rules.length?`<ul class="list">${rules.map(r=>`<li><span><b style="font-weight:600">${esc(P(r.pl)?.name)}</b><span style="display:block;color:var(--muted);font-size:12px">${r.days.length===7?'Every day':r.days.map(d=>DAYS[d]).join(', ')} · ${r.start}:00 to ${r.end}:00</span></span><button class="btn sm ghost danger" style="margin-left:auto" data-act="delr" data-r="${r.id}">Remove</button></li>`).join('')}</ul>`:'<p class="empty">No rules yet. Screens in this group play their default playlist all day.</p>'}
+      </section>
+      <section class="panel"><div class="panel-h"><h2>Add a rule</h2></div><form class="panel-b form" id="ruleform">
+        <div class="field"><label for="rpl">Playlist</label><select id="rpl">${S.playlists.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div>
+        <div class="field"><label>Days</label><div class="days">${DAYS.map((d,i)=>`<label><input type="checkbox" name="rd" value="${i}" ${i<5?'checked':''}>${d}</label>`).join('')}</div></div>
+        <div class="row"><div class="field" style="flex:1"><label for="rs">From</label><select id="rs">${Array.from({length:24},(_,h)=>`<option ${h===9?'selected':''} value="${h}">${h}:00</option>`).join('')}</select></div><div class="field" style="flex:1"><label for="re">Until</label><select id="re">${Array.from({length:24},(_,h)=>`<option ${h===17?'selected':''} value="${h+1}">${h+1}:00</option>`).join('')}</select></div></div>
+        <p class="err" id="rerr" hidden></p>
+        <div><button class="btn primary" type="submit">Add rule</button></div></form></section>
+    </div>`;
+  }},
+  templates:{label:'Templates',f:'All',lf:'land',render(){
+    const inds=['All',...new Set(TEMPLATES.map(t=>t.ind))], f=this.f, lf=this.lf;
+    return `<div class="head"><div><h1>Templates</h1><p>Media layouts for every screen size, plus ready-made slides for any type of business.</p></div></div>
+    <section class="panel"><div class="panel-h"><h2>Media layouts by screen size</h2><span style="color:var(--muted);font-size:12px">${FORMATS[lf].px} px</span></div><div class="panel-b" style="display:flex;flex-direction:column;gap:14px">
+      <div class="row">${Object.entries(FORMATS).map(([k,x])=>`<button class="chip" aria-pressed="${k===lf}" data-act="lf" data-v="${k}">${x.n} <span class="fmt" style="border:0">${x.r[0]}:${x.r[1]}</span></button>`).join('')}</div>
+      <div class="cards">${LAYOUTS[lf].map(l=>`<article class="card">${stage({kind:'layout',fmt:lf,lay:l.id,zones:{},name:l.n},1)}<div class="meta"><b>${esc(l.n)}</b><span>${zonesOf(l).length} zone${zonesOf(l).length>1?'s':''} for images or video</span></div><div class="acts"><button class="btn sm primary" data-act="uselay" data-f="${lf}" data-l="${l.id}">Use layout</button></div></article>`).join('')}</div>
+    </div></section>
+    <h2 style="margin:8px 0 0;font:700 18px var(--f-sign)">Slides by industry</h2>
+    <div class="row">${inds.map(i=>`<button class="chip" aria-pressed="${i===f}" data-act="tf" data-v="${esc(i)}">${esc(i)}</button>`).join('')}</div>
+    <div class="cards">${TEMPLATES.map((t,i)=>({t,i})).filter(x=>f==='All'||x.t.ind===f).map(({t,i})=>`<article class="card">${stage({kind:t.kind,d:t.d,name:t.name},1)}<div class="meta"><span class="kind">${esc(t.ind)}</span><b>${esc(t.name)}</b></div><div class="acts"><button class="btn sm primary" data-act="usetpl" data-t="${i}">Use template</button></div></article>`).join('')}</div>`;
+  }},
+  billing:{label:'Plan and billing',render(){
+    const n=this.n??S.tenant.limit;
+    return `<div class="head"><div><h1>Plan and billing</h1><p>You pay per screen, per month. Choose how many screens you need and the plan that fits. Prices here are placeholders.</p></div></div>
+    <section class="panel panel-b form"><div class="field"><label for="nscr">Screens: <b id="nlab" style="color:var(--ink)">${n}</b> <span style="font-weight:400">(you have ${S.screens.length} paired)</span></label><input id="nscr" type="range" min="1" max="100" value="${n}"></div></section>
+    <div class="plans">${Object.entries(PLANS).map(([k,p])=>{const cur=k===S.tenant.plan&&n===S.tenant.limit;return `<div class="plan ${k===S.tenant.plan?'cur':''}"><span class="kind">${k===S.tenant.plan?'Current plan':'&nbsp;'}</span><h3>${p.name}</h3><div class="price">$${p.price}<small> per screen / month</small></div><ul>${p.feats.map(x=>`<li>${x}</li>`).join('')}</ul>
+      <div class="total">${n} screens × $${p.price} = <b class="num">$${(n*p.price).toLocaleString()}</b> / month</div><button class="btn ${cur?'':'primary'}" data-act="plan" data-k="${k}" ${cur?'disabled':''}>${cur?'Your current plan':'Switch to '+p.name}</button></div>`}).join('')}</div>
+    <p style="color:var(--muted);font-size:13px;margin:0">In the real product, card payments and invoices go through Stripe, and a 14-day free trial starts at sign-up.</p>`;
+  }},
+  api:{label:'API and live data',s:'s1',timer:null,body:'{\n  "Orders": "431",\n  "Average wait": { "value": "3m 05s", "progress": 72 },\n  "Rating": "4.9"\n}',render(){
+    const sc=S.screens.find(s=>s.id===this.s)||S.screens[0]; this.s=sc.id;
+    const p=P(nowPl(sc)), rule=S.schedules.find(r=>r.pl===p?.id&&r.group===sc.group);
+    const np={screen:{id:sc.id,name:sc.name,site:sc.site,group:sc.group,size:FORMATS[sc.fmt].n.toLowerCase(),resolution:FORMATS[sc.fmt].px.replace(' × ','x'),status:sc.status==='on'?'online':'offline'},
+      playlist:{id:p?.id,name:p?.name,source:rule?`schedule ${rule.start}:00-${rule.end}:00`:'default'},
+      items:(p?.items||[]).map(i=>({id:i.c,name:C(i.c)?.name,type:C(i.c)?.kind,seconds:+i.dur}))};
+    const EP=[['GET','/screens','List screens with status, size and group'],['GET','/screens/{id}/now-playing','What a screen is playing right now'],['POST','/content','Upload an image or video, or create a slide'],['PUT','/playlists/{id}','Replace a playlist\'s items and durations'],['POST','/schedules','Add a day-part rule to a screen group'],['POST','/feeds/{feed}','Push live data; slides bound to the feed update in seconds'],['POST','/alerts','Show an emergency message on all or chosen screens']];
+    return `<div class="head"><div><h1>API and live data</h1><p>Connect your own systems. Push live numbers to a slide, read what any screen is showing, or manage content from code. Every screen showing a slide updates within seconds of a change.</p></div></div>
+    <div class="grid2">
+      <section class="panel"><div class="panel-h"><h2>Try it: push live data to a slide</h2><span class="fmt">feed: store-kpis</span></div>
+        <div class="panel-b form">
+          <div id="apistage" style="border-radius:8px;overflow:hidden">${stage(C('c4'))}</div>
+          <div class="field"><label for="apibody">Request body (JSON)</label><textarea id="apibody" style="min-height:130px">${esc(this.body)}</textarea><span class="hint">Keys match the labels on the slide. A value can be text, or an object with value and progress.</span></div>
+          <p class="err" id="apierr" hidden></p>
+          <div class="row"><button class="btn primary" data-act="apisend">Send request</button><button class="btn" data-act="apiauto">${this.timer?'Stop till simulation':'Simulate a till system'}</button></div>
+          <pre class="code" id="apicurl"></pre>
+        </div></section>
+      <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+        <section class="panel"><div class="panel-h"><h2>Request log</h2><span style="color:var(--muted);font-size:12px">latest first</span></div><ul class="list" id="apilog">${apiLog()}</ul></section>
+        <section class="panel"><div class="panel-h"><h2>API key</h2><button class="btn sm" data-act="toast" data-m="In the real product this creates a new key and shows it once.">New key</button></div><div class="panel-b form"><div class="row"><code class="code" style="flex:1;padding:8px 10px;min-width:0">sk_live_hc_••••••••••••7Q2M</code><button class="btn sm" data-act="copykey">Copy</button></div><span class="hint" style="font-size:12px;color:var(--muted)">A key belongs to one customer account and can only reach that account's screens and content.</span></div></section>
+        <section class="panel"><div class="panel-h"><h2>Webhooks</h2></div><ul class="list">${[['screen.offline','A screen stops checking in for 5 minutes'],['screen.online','A screen comes back'],['content.published','Content or a playlist changes'],['plan.limit_reached','The account uses all its screens']].map(w=>`<li><code class="mth">${w[0]}</code><span style="color:var(--muted);font-size:13px">${w[1]}</span></li>`).join('')}</ul></section>
+      </div>
+    </div>
+    <section class="panel"><div class="panel-h"><h2>Fetch what a screen is showing</h2><select id="apiscr" aria-label="Screen" style="border:1px solid var(--line);border-radius:6px;padding:4px 6px;background:var(--surface);max-width:60%">${S.screens.map(s=>`<option value="${s.id}" ${s.id===sc.id?'selected':''}>${esc(s.site)} · ${esc(s.name)}</option>`).join('')}</select></div>
+      <div class="panel-b"><pre class="code">GET ${API_BASE}/screens/${sc.id}/now-playing\n\n${esc(JSON.stringify(np,null,2))}</pre></div></section>
+    <section class="panel"><div class="panel-h"><h2>Endpoints</h2><span class="num" style="color:var(--muted);font-size:12px">${API_BASE}</span></div><div class="tbl-wrap"><table><tbody>${EP.map(e=>`<tr><td style="width:70px"><span class="mth ${e[0].toLowerCase()}">${e[0]}</span></td><td class="num">${e[1]}</td><td>${e[2]}</td></tr>`).join('')}</tbody></table></div></section>
+    <p style="color:var(--muted);font-size:13px;margin:0">The base URL is a placeholder. Nothing on this page calls a real server.</p>`;
+  }},
+  customers:{label:'Customers',admin:true,render(){
+    const rows=S.customers.map(c=>c[0]==='Harbor Coffee Co.'?[c[0],c[1],S.tenant.plan,S.screens.length,S.tenant.limit,c[5]]:c);
+    const mrr=rows.reduce((a,r)=>a+(r[5]==='Trial'?0:r[4]*PLANS[r[2]].price),0);
+    return `<div class="head"><div><h1>Customers</h1><p>Your view as the platform owner. Every customer is a separate account with its own users, screens and content.</p></div><button class="btn primary" data-act="toast" data-m="In the real product this opens the new-customer form.">Add customer</button></div>
+    <div class="tiles"><div class="tile"><div class="k">Customers</div><div class="v">${rows.length}</div><div class="s">${rows.filter(r=>r[5]==='Trial').length} on trial</div></div>
+      <div class="tile"><div class="k">Paired screens</div><div class="v">${rows.reduce((a,r)=>a+r[3],0)}</div><div class="s">of ${rows.reduce((a,r)=>a+r[4],0)} licensed</div></div>
+      <div class="tile"><div class="k">Monthly recurring revenue</div><div class="v">$${mrr.toLocaleString()}</div><div class="s">paying customers, sample data</div></div></div>
+    <section class="panel tbl-wrap"><table><thead><tr><th>Customer</th><th>Industry</th><th>Plan</th><th>Screens used</th><th>Monthly</th><th>Status</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${PLANS[r[2]].name}</td><td><span class="num">${r[3]} / ${r[4]}</span>${r[3]>=r[4]?' <span class="pill trial">At limit</span>':''}</td><td class="num">$${(r[4]*PLANS[r[2]].price).toLocaleString()}</td><td><span class="pill ${r[5]==='Trial'?'trial':'on'}">${r[5]}</span></td></tr>`).join('')}
+    </tbody></table></section>`;
+  }}
+};
+
+/* ---------- shell ---------- */
+let cur='dashboard';
+function nav(){
+  const item=k=>`<a href="#${k}" ${k===cur?'aria-current="page"':''}>${VIEWS[k].label}${VIEWS[k].count?`<span class="count">${VIEWS[k].count()}</span>`:''}</a>`;
+  const main=Object.keys(VIEWS).filter(k=>!VIEWS[k].admin), adm=Object.keys(VIEWS).filter(k=>VIEWS[k].admin);
+  $('#nav').innerHTML=`<div class="nav-label">Harbor Coffee Co.</div>${main.map(item).join('')}<div class="nav-label">Platform admin</div>${adm.map(item).join('')}`;
+  $('#tPlan').textContent=`${PLANS[S.tenant.plan].name} plan · ${S.screens.length} of ${S.tenant.limit} screens`;
+}
+function render(){const y=window.scrollY;$('#view').innerHTML=VIEWS[cur].render();nav();bind();window.scrollTo(0,y);}
+function go(){const h=location.hash.slice(1);cur=VIEWS[h]?h:'dashboard';if(cur!=='api'&&VIEWS.api.timer){clearInterval(VIEWS.api.timer);VIEWS.api.timer=null;}VIEWS[cur].render&&render();window.scrollTo(0,0);}
+window.addEventListener('hashchange',go);
+
+function toast(m){const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2600);}
+function modal(html,wide){
+  $('#layer').innerHTML=`<div class="scrim" data-close><div class="modal ${wide?'wide':''}" role="dialog" aria-modal="true">${html}</div></div>`;
+  const f=$('#layer input,#layer select,#layer textarea');f&&f.focus();
+}
+function closeModal(){$('#layer').innerHTML='';}
+$('#layer').addEventListener('click',e=>{if(e.target.hasAttribute('data-close')||e.target.closest('[data-x]'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(player)stopPlayer();else closeModal();}});
+
+/* ---------- actions ---------- */
+function bind(){
+  const up=$('#up'); if(up) up.onchange=()=>{const f=up.files[0];if(!f)return;const v=f.type.startsWith('video');
+    const c={id:null,name:f.name.replace(/\.[^.]+$/,''),kind:'layout',fmt:'land',lay:'full',dur:v?20:10,zones:{a:Z(URL.createObjectURL(f),v?'video':'image')}};up.value='';layoutEditor(c);};
+  if(cur==='api') apiBind();
+  const pn=$('#plname'); if(pn) pn.onchange=()=>{P(VIEWS.playlists.sel).name=pn.value.trim()||'Untitled playlist';render();};
+  const rf=$('#ruleform'); if(rf) rf.onsubmit=e=>{e.preventDefault();const days=[...rf.querySelectorAll('[name=rd]:checked')].map(i=>+i.value),s=+$('#rs').value,en=+$('#re').value;
+    const er=$('#rerr');if(!days.length){er.textContent='Pick at least one day.';er.hidden=false;return;}if(en<=s){er.textContent='The end time must be after the start time.';er.hidden=false;return;}
+    const g=VIEWS.schedules.g, clash=S.schedules.find(r=>r.group===g&&r.days.some(d=>days.includes(d))&&s<r.end&&en>r.start);
+    if(clash){er.textContent=`This overlaps ${P(clash.pl).name} (${clash.start}:00 to ${clash.end}:00). Change the times or remove that rule first.`;er.hidden=false;return;}
+    S.schedules.push({id:nid('r'),group:g,pl:$('#rpl').value,days,start:s,end:en});render();toast('Rule added');};
+  const ns=$('#nscr'); if(ns) ns.oninput=()=>{VIEWS.billing.n=+ns.value;render();$('#nscr').focus();};
+}
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.act==='setpl'){S.screens.find(s=>s.id===t.dataset.s).pl=t.value;render();toast('Default playlist changed');}
+  if(t.dataset.act==='dur'){P(VIEWS.playlists.sel).items[+t.dataset.i].dur=Math.max(3,+t.value||3);render();}
+});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b||b.tagName==='SELECT'||b.tagName==='INPUT')return;
+  const a=b.dataset.act, pl=P(VIEWS.playlists.sel);
+  const A={
+    sf:()=>{VIEWS.screens.f=b.dataset.v;render();},
+    sg:()=>{VIEWS.schedules.g=b.dataset.v;render();},
+    tf:()=>{VIEWS.templates.f=b.dataset.v;render();},
+    pair:pairDialog,
+    unpair:()=>{const s=S.screens.find(x=>x.id===b.dataset.s);S.screens=S.screens.filter(x=>x!==s);render();toast(`${s.name} removed. One screen freed on your plan.`);},
+    preview:()=>{const s=S.screens.find(x=>x.id===b.dataset.s);startPlayer(P(nowPl(s)),s.name);},
+    selpl:()=>{VIEWS.playlists.sel=b.dataset.p;render();},
+    newpl:()=>{const p={id:nid('p'),name:'New playlist',items:[]};S.playlists.push(p);VIEWS.playlists.sel=p.id;render();$('#plname').select();},
+    additem:()=>{const c=C($('#addc').value);pl.items.push({c:c.id,dur:c.dur});render();},
+    rmit:()=>{pl.items.splice(+b.dataset.i,1);render();},
+    mv:()=>{const i=+b.dataset.i,j=i+ +b.dataset.d;[pl.items[i],pl.items[j]]=[pl.items[j],pl.items[i]];render();},
+    playpl:()=>pl.items.length?startPlayer(pl,'Preview'):toast('Add content to this playlist first'),
+    play1:()=>startPlayer({name:C(b.dataset.c).name,items:[{c:b.dataset.c,dur:C(b.dataset.c).dur}]},'Preview'),
+    delc:()=>{const id=b.dataset.c,n=plUse(id);if(n){toast(`Remove it from ${n} playlist${n>1?'s':''} first`);return;}S.content=S.content.filter(c=>c.id!==id);render();toast('Deleted');},
+    edit:()=>{const c=C(b.dataset.c);c.kind==='layout'?layoutEditor(c):editor(c);},
+    lf:()=>{VIEWS.templates.lf=b.dataset.v;render();},
+    uselay:()=>layoutEditor({id:null,name:FORMATS[b.dataset.f].n+' · '+LAY(b.dataset.f,b.dataset.l).n,kind:'layout',fmt:b.dataset.f,lay:b.dataset.l,dur:10,zones:{}}),
+    usetpl:()=>{const t=TEMPLATES[+b.dataset.t];editor({id:null,name:t.name,kind:t.kind,dur:12,d:JSON.parse(JSON.stringify(t.d))});},
+    delr:()=>{S.schedules=S.schedules.filter(r=>r.id!==b.dataset.r);render();toast('Rule removed');},
+    plan:()=>{const k=b.dataset.k,n=VIEWS.billing.n??S.tenant.limit;if(n<S.screens.length){toast(`You have ${S.screens.length} paired screens. Remove some first, or choose at least ${S.screens.length}.`);return;}S.tenant.plan=k;S.tenant.limit=n;render();toast(`Switched to ${PLANS[k].name} with ${n} screens`);},
+    toast:()=>toast(b.dataset.m),
+    apisend:()=>apiPush($('#apibody').value,'sent from this page'),
+    apiauto:apiAuto,
+    copykey:()=>{try{navigator.clipboard.writeText('sk_live_hc_example_key_7Q2M').then(()=>toast('Example key copied'),()=>toast('Copy is blocked here. Select the key instead.'));}catch(e){toast('Copy is blocked here. Select the key instead.');}}
+  };
+  A[a]&&A[a]();
+});
+
+function pairDialog(){
+  const full=S.screens.length>=S.tenant.limit;
+  if(full){modal(`<div class="modal-h"><h2>Your plan is full</h2><button class="btn ghost" data-x aria-label="Close">✕</button></div><div class="modal-b"><p style="margin:0">You are using all ${S.tenant.limit} screens on your ${PLANS[S.tenant.plan].name} plan. Add more screens to your plan to pair this one.</p></div><div class="modal-f"><button class="btn" data-x>Not now</button><a class="btn primary" href="#billing" data-x>Add screens</a></div>`);return;}
+  modal(`<div class="modal-h"><h2>Pair a screen</h2><button class="btn ghost" data-x aria-label="Close">✕</button></div>
+  <form id="pf"><div class="modal-b form">
+    <p style="margin:0;color:var(--muted)">Open the player app on the TV. It shows a 6-character code. For this prototype, any 6 letters or numbers will work.</p>
+    <div class="field"><label for="pcode">Pairing code</label><input id="pcode" maxlength="6" autocomplete="off" placeholder="e.g. K7Q2MX" style="font:500 20px var(--f-mono);letter-spacing:.2em;text-transform:uppercase"></div>
+    <div class="field"><label for="pname">Screen name</label><input id="pname" placeholder="e.g. Drive-through menu"></div>
+    <div class="row"><div class="field" style="flex:1;min-width:140px"><label for="pgroup">Group</label><select id="pgroup">${S.groups.map(g=>`<option>${esc(g)}</option>`).join('')}</select></div>
+    <div class="field" style="flex:1;min-width:140px"><label for="psite">Site</label><select id="psite"><option>Pier St</option><option>Old Town</option></select></div></div>
+    <div class="field"><label for="pfmt">Screen size and orientation</label><select id="pfmt">${Object.entries(FORMATS).map(([k,x])=>`<option value="${k}">${x.n} · ${x.px}</option>`).join('')}</select><span class="hint">The player detects this automatically in the real product.</span></div>
+    <div class="field"><label for="ppl">Default playlist</label><select id="ppl">${S.playlists.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div>
+    <p class="err" id="perr" hidden></p>
+    <p style="margin:0;font-size:12px;color:var(--muted)">This uses 1 of your ${S.tenant.limit - S.screens.length} free screens.</p>
+  </div><div class="modal-f"><button type="button" class="btn" data-x>Cancel</button><button class="btn primary" type="submit">Pair screen</button></div></form>`);
+  $('#pf').onsubmit=e=>{e.preventDefault();const code=$('#pcode').value.trim(),name=$('#pname').value.trim(),er=$('#perr');
+    if(!/^[a-z0-9]{6}$/i.test(code)){er.textContent='Enter the 6-character code shown on the TV.';er.hidden=false;return;}
+    if(!name){er.textContent='Give the screen a name so your team can find it.';er.hidden=false;return;}
+    S.screens.push({id:nid('s'),name,group:$('#pgroup').value,site:$('#psite').value,status:'on',seen:'just now',pl:$('#ppl').value,fmt:$('#pfmt').value});
+    S.activity.unshift(['Maya Cruz','paired '+name,'just now']);closeModal();render();toast(`${name} is paired and playing`);};
+}
+
+function editor(c){
+  const fields=FIELDS[c.kind], d=c.d;
+  const val=f=>{const v=d[f[0]];if(f[2]==='lines')return v.map(x=>Array.isArray(x)?x.join(' | '):x).join('\n');return v??'';};
+  modal(`<div class="modal-h"><h2>${c.id?'Edit':'New'}: ${esc(c.name)}</h2><button class="btn ghost" data-x aria-label="Close">✕</button></div>
+  <div class="modal-b ed"><form class="form" id="ef">
+    <div class="field"><label for="ename">Name in your library</label><input id="ename" value="${esc(c.name)}"></div>
+    ${fields.map(f=>`<div class="field"><label for="f_${f[0]}">${esc(f[1])}</label>${f[2]==='lines'?`<textarea id="f_${f[0]}" data-k="${f[0]}" data-n="${f[3]}">${esc(val(f))}</textarea>`:`<input id="f_${f[0]}" data-k="${f[0]}" value="${esc(val(f))}">`}</div>`).join('')}
+    <div class="row">${[['bg','Background'],['fg','Text'],['accent','Accent']].map(([k,l])=>`<div class="field"><label for="f_${k}">${l}</label><input type="color" id="f_${k}" data-k="${k}" value="${esc(d[k])}" style="height:36px;padding:2px;width:72px"></div>`).join('')}
+      <div class="field"><label for="edur">Seconds</label><input id="edur" type="number" min="3" value="${c.dur}" style="width:80px"></div></div>
+  </form><div><div id="eprev" style="border-radius:8px;overflow:hidden">${stage(c)}</div><p style="color:var(--muted);font-size:12px">Live preview at TV proportions (16:9).</p></div></div>
+  <div class="modal-f"><button class="btn" data-x>Cancel</button><button class="btn primary" id="esave">${c.id?'Save changes':'Add to library'}</button></div>`,true);
+  const read=()=>{document.querySelectorAll('#ef [data-k]').forEach(i=>{const k=i.dataset.k;if(i.tagName==='TEXTAREA'){const n=+i.dataset.n;d[k]=i.value.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>n>1?Array.from({length:n},(_,j)=>(l.split('|')[j]||'').trim()):l);}else d[k]=i.value;});};
+  $('#ef').oninput=()=>{read();$('#eprev').innerHTML=stage(c);};
+  $('#ef').onsubmit=e=>e.preventDefault();
+  $('#esave').onclick=()=>{read();c.name=$('#ename').value.trim()||c.name;c.dur=Math.max(3,+$('#edur').value||10);
+    if(!c.id){c.id=nid('c');S.content.unshift(c);closeModal();location.hash='content';if(cur==='content')render();toast('Added to your content library');}
+    else{closeModal();render();toast('Saved. Screens playing it update within seconds.');}};
+}
+
+/* ---------- media layout editor ---------- */
+function layoutEditor(orig){
+  const c={...orig,zones:{...orig.zones}}; let target=null;
+  modal(`<div class="modal-h"><h2>${orig.id?'Edit':'New'} media layout</h2><button class="btn ghost" data-x aria-label="Close">✕</button></div>
+  <div class="modal-b ed" id="led"><div class="form">
+    <div class="field"><label for="lname">Name in your library</label><input id="lname" value="${esc(c.name)}"></div>
+    <div class="field"><label for="lfmt">Screen size</label><select id="lfmt">${Object.entries(FORMATS).map(([k,x])=>`<option value="${k}" ${k===c.fmt?'selected':''}>${x.n} · ${x.px}</option>`).join('')}</select></div>
+    <div class="field"><label>Layout</label><div class="lays" id="llays"></div></div>
+    <div class="field"><label>Zones</label><div id="lzones"></div></div>
+    <div class="field"><label for="ldur">Seconds on screen</label><input id="ldur" type="number" min="3" value="${c.dur}" style="width:90px"></div>
+    <p class="err" id="lerr" hidden></p>
+  </div><div><div id="lprev"></div><p style="color:var(--muted);font-size:12px">Click a zone to upload into it. Images and video both work; video plays muted and loops.</p></div></div>
+  <input type="file" id="lfile" accept="image/*,video/*" hidden>
+  <div class="modal-f"><button class="btn" data-x>Cancel</button><button class="btn primary" id="lsave">${orig.id?'Save changes':'Add to library'}</button></div>`,true);
+  const draw=()=>{
+    const l=LAY(c.fmt,c.lay), [w,h]=FORMATS[c.fmt].r;
+    $('#llays').innerHTML=LAYOUTS[c.fmt].map(x=>`<button type="button" aria-pressed="${x.id===l.id}" data-lay="${x.id}"><span class="mini" style="grid-template-columns:${x.c};grid-template-rows:${x.r};grid-template-areas:${x.a.replace(/"/g,"'")};aspect-ratio:${w}/${h};${w>=h?'width:100%':'height:52px;width:auto'}">${zonesOf(x).map(z=>`<i style="grid-area:${z}"></i>`).join('')}</span>${esc(x.n)}</button>`).join('');
+    $('#lzones').innerHTML=zonesOf(l).map(z=>{const m=c.zones[z];return `<div class="zrow"><span class="zk">${z.toUpperCase()}</span><div class="row"><button type="button" class="btn sm" data-up="${z}">${m?'Replace':'Upload'}</button>${m?`<span style="color:var(--muted);font-size:12px">${m.type==='video'?'Video':'Image'}</span><select aria-label="Fit for zone ${z.toUpperCase()}" data-fit="${z}" style="border:1px solid var(--line);border-radius:6px;padding:3px 6px;background:var(--surface);font-size:12px"><option value="cover" ${m.fit!=='contain'?'selected':''}>Fill zone</option><option value="contain" ${m.fit==='contain'?'selected':''}>Fit whole picture</option></select><button type="button" class="btn sm ghost danger" data-clr="${z}">Clear</button>`:'<span style="color:var(--muted);font-size:12px">Empty</span>'}</div></div>`}).join('');
+    $('#lprev').innerHTML=`<div class="frame big"><div class="stage pickable ${ratio(c.fmt)<4/3?'tall':'wide'}" style="aspect-ratio:${w}/${h}">${layoutSlide(c,true)}</div></div>`;
+  };
+  draw();
+  const root=$('#layer .modal');
+  root.addEventListener('click',e=>{
+    const t=e.target.closest('[data-lay],[data-up],[data-clr],.zone');if(!t)return;
+    if(t.dataset.lay){c.lay=t.dataset.lay;draw();}
+    else if(t.dataset.clr){delete c.zones[t.dataset.clr];draw();}
+    else{target=t.dataset.up||t.dataset.z;$('#lfile').click();}
+  });
+  root.addEventListener('change',e=>{
+    if(e.target.id==='lfmt'){c.fmt=e.target.value;c.lay=LAYOUTS[c.fmt][0].id;draw();}
+    if(e.target.dataset.fit){c.zones[e.target.dataset.fit].fit=e.target.value;draw();}
+    if(e.target.id==='lfile'){const f=e.target.files[0];if(f&&target){c.zones[target]=Z(URL.createObjectURL(f),f.type.startsWith('video')?'video':'image');draw();}e.target.value='';}
+  });
+  $('#lsave').onclick=()=>{
+    const l=LAY(c.fmt,c.lay), used=zonesOf(l).filter(z=>c.zones[z]);
+    if(!used.length){const er=$('#lerr');er.textContent='Add an image or video to at least one zone.';er.hidden=false;return;}
+    c.zones=Object.fromEntries(used.map(z=>[z,c.zones[z]]));c.name=$('#lname').value.trim()||c.name;c.dur=Math.max(3,+$('#ldur').value||10);
+    if(orig.id){Object.assign(orig,c);closeModal();render();toast('Saved. Screens playing it update within seconds.');}
+    else{c.id=nid('c');S.content.unshift(c);closeModal();if(cur==='content')render();else location.hash='content';toast('Added to your content library');}
+  };
+}
+
+/* ---------- API demo ---------- */
+const API_BASE='https://api.signboard.example/v1';
+const apiLog=()=>S.apilog.slice(0,6).map(l=>`<li><span class="mth ${l[1].toLowerCase()}">${l[1]}</span><span style="min-width:0"><span class="num" style="font-size:12px;word-break:break-all">${esc(l[2])}</span>${l[4]?`<span style="display:block;color:var(--muted);font-size:12px">${esc(l[4])}</span>`:''}</span><span class="when"><span class="${l[3]<300?'st-ok':'st-bad'}">${l[3]}</span> · ${l[0]}</span></li>`).join('');
+function apiCurl(){const el=$('#apicurl');if(!el)return;let body=VIEWS.api.body;try{body=JSON.stringify(JSON.parse(body));}catch(e){}
+  el.textContent=`curl -X POST ${API_BASE}/feeds/store-kpis \\\n  -H "Authorization: Bearer $SIGNBOARD_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '${body}'`;}
+function apiBind(){
+  const t=$('#apibody');if(t)t.oninput=()=>{VIEWS.api.body=t.value;apiCurl();};
+  const s=$('#apiscr');if(s)s.onchange=()=>{VIEWS.api.s=s.value;S.apilog.unshift([new Date().toLocaleTimeString([], {hour12:false}),'GET',`/v1/screens/${s.value}/now-playing`,200,'']);render();};
+  apiCurl();
+}
+function apiPush(text,note){
+  const time=new Date().toLocaleTimeString([], {hour12:false}), er=$('#apierr');
+  let data;try{data=JSON.parse(text);if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('The body must be a JSON object');}
+  catch(e){S.apilog.unshift([time,'POST','/v1/feeds/store-kpis',400,'Invalid JSON: '+e.message]);if(er){er.textContent='That is not valid JSON. '+e.message;er.hidden=false;}const lg=$('#apilog');if(lg)lg.innerHTML=apiLog();return;}
+  if(er)er.hidden=true;
+  const c=C(S.feeds['store-kpis']), skipped=[];
+  Object.entries(data).forEach(([k,v])=>{const kp=c.d.kpis.find(x=>x[0].toLowerCase()===k.toLowerCase());if(!kp){skipped.push(k);return;}
+    if(v&&typeof v==='object'){if(v.value!=null)kp[1]=String(v.value);if(v.progress!=null)kp[2]=String(Math.max(0,Math.min(100,+v.progress||0)));}else kp[1]=String(v);});
+  S.apilog.unshift([time,'POST','/v1/feeds/store-kpis',200,[note,skipped.length?'ignored unknown keys: '+skipped.join(', '):''].filter(Boolean).join(' · ')]);
+  const st=$('#apistage');if(st){st.innerHTML=stage(c);st.classList.remove('flash');void st.offsetWidth;st.classList.add('flash');}
+  const lg=$('#apilog');if(lg)lg.innerHTML=apiLog();
+  if(player&&player.pl.items[player.i]?.c===c.id)$('#pst').innerHTML=slide(c);
+}
+function apiAuto(){
+  const A=VIEWS.api;
+  if(A.timer){clearInterval(A.timer);A.timer=null;render();return;}
+  const step=()=>{const k=C('c4').d.kpis, orders=(parseInt(k[0][1])||400)+1+Math.floor(Math.random()*4), wait=150+Math.floor(Math.random()*120);
+    A.body=JSON.stringify({'Orders':{value:String(orders),progress:Math.min(100,Math.round(orders/550*100))},'Average wait':{value:`${Math.floor(wait/60)}m ${String(wait%60).padStart(2,'0')}s`,progress:Math.round(100-wait/4)},'Rating':(4.6+Math.random()*.4).toFixed(1)},null,2);
+    const t=$('#apibody');if(t)t.value=A.body;apiCurl();apiPush(A.body,'from till system');};
+  A.timer=setInterval(step,3000);render();step();
+}
+
+/* ---------- player preview ---------- */
+let player=null;
+function startPlayer(pl,label){
+  if(!pl||!pl.items.length){toast('Nothing scheduled to play');return;}
+  stopPlayer();
+  const el=document.createElement('div');el.className='player';el.setAttribute('role','dialog');el.setAttribute('aria-label','Player preview');
+  el.innerHTML=`<div class="stage" id="pst"></div><div class="prog"><i id="ppg"></i></div><div class="player-bar"><span id="pinfo"></span><button class="btn sm" id="pprev">Previous</button><button class="btn sm" id="ppause">Pause</button><button class="btn sm" id="pnext">Next</button><button class="btn sm" id="pclose">Close</button></div>`;
+  document.body.append(el);
+  player={el,pl,label,i:0,t:0,paused:false,last:performance.now()};
+  const show=()=>{const it=pl.items[player.i],c=C(it.c),f=fmtOf(c),w=Math.max(160,Math.min(innerWidth-48,(innerHeight-130)*ratio(f)));
+    const ps=$('#pst');ps.style.aspectRatio=FORMATS[f].r.join('/');ps.style.width=w+'px';$('.prog').style.width=Math.min(w,innerWidth-32)+'px';ps.innerHTML=slide(c);$('#pinfo').textContent=`${label} · ${pl.name} · item ${player.i+1} of ${pl.items.length} · ${it.dur}s`;player.t=0;};
+  player.show=show;show();
+  $('#pnext').onclick=()=>{player.i=(player.i+1)%pl.items.length;show();};
+  $('#pprev').onclick=()=>{player.i=(player.i-1+pl.items.length)%pl.items.length;show();};
+  $('#ppause').onclick=e=>{player.paused=!player.paused;e.target.textContent=player.paused?'Play':'Pause';};
+  $('#pclose').onclick=stopPlayer;
+  const tick=now=>{if(!player)return;const dt=(now-player.last)/1000;player.last=now;if(!player.paused){player.t+=dt;const it=pl.items[player.i];$('#ppg').style.width=Math.min(100,player.t/it.dur*100)+'%';if(player.t>=it.dur){player.i=(player.i+1)%pl.items.length;show();}}player.raf=requestAnimationFrame(tick);};
+  player.raf=requestAnimationFrame(tick);
+  $('#pclose').focus();
+}
+function stopPlayer(){if(!player)return;cancelAnimationFrame(player.raf);player.el.remove();player=null;}
+
+go();
+</script>
+
+</body></html>
